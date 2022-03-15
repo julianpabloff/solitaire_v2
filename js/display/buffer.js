@@ -189,7 +189,6 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		process.stdout.write(string);
 	}
 	this.render = function(clearLastFrame = true) {
-		const start = Date.now();
 		for (let i = 0; i < this.size; i++) {
 			let code = this.current[i];
 			let colorCode = this.colors[i];
@@ -240,32 +239,36 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 			this.previous[i] = code;
 			this.prevColors[i] = colorCode;
 		}
-		drawToScreen((Date.now() - start).toString() + '      ', 0, 0);
 	}
 	// Prints row by row, each row all at once. Faster for large areas that completely change
 	this.simpleRender = function() {
-		const colorCode = this.colors[0];
-		if (colorCode != manager.lastRenderedColor) {
-			const fgCode = colorCode >> 4;
-			const bgCode = colorCode & 0x0F;
-			if (fgCode == 0 || bgCode == 0) process.stdout.write('\x1b[0m');
-			if (fgCode > 0) process.stdout.write('\x1b[' + (29 + fgCode).toString() + 'm');
-			if (bgCode > 0) process.stdout.write('\x1b[' + (39 + bgCode).toString() + 'm');
-		}
-		let row = [];
+		let start = this.indexToScreen(0); let mark = start;
+		let output = []; let outputColor;
 		for (let i = 0; i <= this.size; i++) {
-			if (i % this.width == 0 && i > 0) {
-				const string = row.join('');
-				const y = this.y + Math.floor((i- this.width) / this.width);
-				drawToScreen(string, this.x, y);
-				row = [];
-			}
 			let code = this.current[i];
+			let colorCode = this.colors[i];
 			const prevCode = this.previous[i];
-			if (code == 0 && prevCode != 0) code = prevCode;
-			row.push(String.fromCharCode(code));
-			this.previous[i] = code;
-			this.prevColors[i] = colorCode;
+			const prevColorCode = this.prevColors[i];
+			if (code == 0 && prevCode != 0) {
+				code = prevCode;
+				colorCode = prevColorCode;
+			}
+			if ((i % this.width == 0 && i > 0) || colorCode != outputColor) {
+				const fgCode = outputColor >> 4;
+				const bgCode = outputColor & 0x0F;
+				if (fgCode == 0 || bgCode == 0) process.stdout.write('\x1b[0m');
+				if (fgCode > 0) process.stdout.write('\x1b[' + (29 + fgCode).toString() + 'm');
+				if (bgCode > 0) process.stdout.write('\x1b[' + (39 + bgCode).toString() + 'm');
+				const string = output.join('');
+				drawToScreen(string, start.x, start.y);
+				start = this.indexToScreen(i);
+				output = [];
+				outputColor = colorCode;
+			}
+			output.push(String.fromCharCode(code));
+			outputColor = colorCode;
+			manager.lastRenderedColor = colorCode;
+			mark = this.indexToScreen(i);
 		}
 	}
 	// For adding to the canvas without it clearing
@@ -277,7 +280,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		this.current.fill(char.charCodeAt(0));
 		manager.setBg(color);
 		this.colors.fill(manager.color);
-		this.simpleRender();
+		return this;
 	}
 
 	// Saving buffer and reading from the save

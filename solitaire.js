@@ -12,7 +12,7 @@ process.stdin.on('keypress', function(chunk, key) {
 		display.exit();
 		process.exit();
 	} else if (keyPressed == '1') {
-		display.menu.drawLogo();
+		display.menu.drawMenu();
 	} else if (keyPressed == '2') {
 		display.menu.clearLogo();
 	}
