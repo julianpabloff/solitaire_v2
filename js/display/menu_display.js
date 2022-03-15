@@ -29,31 +29,34 @@ const MenuDisplay = function(d) {
 	const logoBuffer = d.buffer.new(logo.x, logo.y, logo.w, logo.h, 'menu', 1);
 	const optionsBuffer = d.buffer.new(options.x, options.y, options.w, options.h, 'menu', 1);
 
-	this.drawMenu = function(selectedIndex = 0) {
+	this.start = function(index = 0) {
+		background.fill('green').simpleRender();
 		d.buffer.setColor('white', 'black');
 		d.drawSquare(logoBuffer, 0, 0, logo.w, logo.h, true);
 		for (let i = 0; i < logoText.length; i++)
 			logoBuffer.draw(logoText[i], 1, 2 + i);
 		logoBuffer.simpleRender();
-		d.drawSquare(optionsBuffer, 0, 0, options.w, options.h, true);
-		for (let i = 0; i < optionText.length; i++) {
-			if (i == selectedIndex) d.buffer.setColor('black', 'white');
-			else d.buffer.setColor('white', 'black');
-			let spacing = (options.w - optionText[i].length - 2) / 2;
-			let output = ' '.repeat(spacing) + optionText[i] + ' '.repeat(spacing);
-			optionsBuffer.draw(output, 1, 2 * i + 1);
-		}
+		drawMenu(index);
 		optionsBuffer.simpleRender();
 	}
-	this.clearLogo = function() {
+	const drawMenu = function(index) {
+		d.buffer.setColor('white', 'black');
+		d.drawSquare(optionsBuffer, 0, 0, options.w, options.h, true);
+		for (let i = 0; i < optionText.length; i++) {
+			if (i == index) d.buffer.setColor('black', 'white');
+			else d.buffer.setColor('white', 'black');
+			const spacing = (options.w - optionText[i].length - 2) / 2;
+			const output = ' '.repeat(spacing) + optionText[i] + ' '.repeat(spacing);
+			optionsBuffer.draw(output, 1, 2 * i + 1);
+		}
+	}
+	this.update = function(index = 0) {
+		drawMenu(index);
+		optionsBuffer.render();
+	}
+	this.clear = function() {
 		logoBuffer.fill('green').simpleRender();
 		optionsBuffer.fill('green').simpleRender();
-	}
-	this.start = function() {
-		const start = Date.now();
-		background.fill('green').simpleRender();
-		process.stdout.cursorTo(0, 0);
-		process.stdout.write((Date.now() - start).toString());
 	}
 }
 

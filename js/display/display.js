@@ -1,5 +1,6 @@
 const BufferManager = require('./buffer.js');
 const MenuDisplay = require('./menu_display.js');
+const SettingsDisplay = require('./settings_display.js');
 
 const Display = function() {
 	this.init = function() {
@@ -27,6 +28,7 @@ const Display = function() {
 
 	this.buffer = new BufferManager();
 	this.menu = new MenuDisplay(this);
+	this.settings = new SettingsDisplay(this);
 
 	const squareElements = {
 		none: {tl: ' ', tr: ' ', bl: ' ', br: ' ', h: ' ', v: ' '},

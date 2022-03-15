@@ -263,7 +263,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 				drawToScreen(string, start.x, start.y);
 				start = this.indexToScreen(i);
 				output = [];
-				outputColor = colorCode;
+				manager.lastRenderedColor = outputColor = colorCode;
 			}
 			output.push(String.fromCharCode(code));
 			outputColor = colorCode;
