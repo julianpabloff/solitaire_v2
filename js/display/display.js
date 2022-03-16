@@ -6,6 +6,7 @@ const Display = function() {
 	this.init = function() {
 		process.stdout.write('\x1b[2J');
 		process.stdout.write('\x1b[?25l');
+		background.fill(this.theme['tab'][1]).simpleRender();
 	}
 	this.exit = function(screen = 'menu') {
 		// this[screen].exit();
@@ -29,6 +30,20 @@ const Display = function() {
 	this.buffer = new BufferManager();
 	this.menu = new MenuDisplay(this);
 	this.settings = new SettingsDisplay(this);
+	const background = this.buffer.new(0, 0, columns, rows, 'menu', 0);
+
+	this.themes = require('../../json/themes.json');
+	this.getTheme = function(name) {
+		for (const theme of this.themes)
+			if (theme.title == name) return theme;
+	}
+	this.setTheme = function(name) {
+		this.theme = this.getTheme(name);
+	}
+	this.setColor = function(attribute) {
+		const color = this.theme[attribute];
+		this.buffer.setColor(color[0], color[1]);
+	}
 
 	const squareElements = {
 		none: {tl: ' ', tr: ' ', bl: ' ', br: ' ', h: ' ', v: ' '},
@@ -47,6 +62,7 @@ const Display = function() {
 		buffer.draw(piece.bl + piece.h.repeat(width - 2) + piece.br, x, y + height - 1);
 		return buffer;
 	}
+
 }
 
 module.exports = Display;

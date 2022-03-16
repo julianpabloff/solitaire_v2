@@ -13,7 +13,12 @@ const Controller = function() {
 		else number = number - (2 * !up) + 1;
 		return number;
 	}
-	this.outputCommand = (command) => {return {ran: true, command: command}};
+	this.outputCommand = function(type, data) {
+		return {
+			ran: true,
+			command: { type: type, data: data }
+		}
+	};
 }
 
 module.exports = Controller;

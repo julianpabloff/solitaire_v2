@@ -25,13 +25,11 @@ const MenuDisplay = function(d) {
 	let logo, options;
 	this.setSize();
 
-	const background = d.buffer.new(0, 0, d.width, d.height, 'menu', 0);
 	const logoBuffer = d.buffer.new(logo.x, logo.y, logo.w, logo.h, 'menu', 1);
 	const optionsBuffer = d.buffer.new(options.x, options.y, options.w, options.h, 'menu', 1);
 
 	this.start = function(index = 0) {
-		background.fill('green').simpleRender();
-		d.buffer.setColor('white', 'black');
+		d.setColor('txt');
 		d.drawSquare(logoBuffer, 0, 0, logo.w, logo.h, true);
 		for (let i = 0; i < logoText.length; i++)
 			logoBuffer.draw(logoText[i], 1, 2 + i);
@@ -40,11 +38,11 @@ const MenuDisplay = function(d) {
 		optionsBuffer.simpleRender();
 	}
 	const drawMenu = function(index) {
-		d.buffer.setColor('white', 'black');
+		d.setColor('txt');
 		d.drawSquare(optionsBuffer, 0, 0, options.w, options.h, true);
 		for (let i = 0; i < optionText.length; i++) {
-			if (i == index) d.buffer.setColor('black', 'white');
-			else d.buffer.setColor('white', 'black');
+			if (i == index) d.setColor('txtcur');
+			else d.setColor('txt');
 			const spacing = (options.w - optionText[i].length - 2) / 2;
 			const output = ' '.repeat(spacing) + optionText[i] + ' '.repeat(spacing);
 			optionsBuffer.draw(output, 1, 2 * i + 1);
@@ -55,8 +53,9 @@ const MenuDisplay = function(d) {
 		optionsBuffer.render();
 	}
 	this.clear = function() {
-		logoBuffer.fill('green').simpleRender();
-		optionsBuffer.fill('green').simpleRender();
+		const color = d.theme['tab'][1];
+		logoBuffer.fill(color).simpleRender();
+		optionsBuffer.fill(color).simpleRender();
 	}
 }
 

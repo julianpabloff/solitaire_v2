@@ -29,12 +29,14 @@ const SettingsController = function(c) {
 			else if (this.enter) {
 				this.code[this.buffer[0]] = this.buffer[1];
 				this.buffer.pop();
-				if (this.buffer[0] == 0 || this.buffer[0] == 1) return c.outputCommand('preview');
+				if (this.buffer[0] == 0 || this.buffer[0] == 1) {
+					const data = [this.buffer, this.code];
+					return c.outputCommand('preview', data);
+				}
 			} else if (this.esc) this.buffer.pop();
 		}
-		// if (this.buffer[0] != prevBuffer[0] || this.buffer[1] != prevBuffer[1])
-		// 	return false;
-		return c.outputCommand('move');
+		const data = [this.buffer, this.code];
+		return c.outputCommand('move', data);
 	}
 }
 

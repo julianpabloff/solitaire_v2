@@ -6,7 +6,9 @@
 		"bac" : ["black", "white"],
 		"tab" : ["black", "green"],
 		"cur" : ["black", "white"],
-		"tom" : ["white", "black"]
+		"tom" : ["white", "black"],
+		"txt" : ["white", "black"],
+		"txtcur" : ["black", "white"]
 	},
 	{
 		"title" : "light",
@@ -15,7 +17,9 @@
 		"bac" : ["black", "white"],
 		"tab" : ["black", "white"],
 		"cur" : ["white", "black"],
-		"tom" : ["white", "red"]
+		"tom" : ["white", "red"],
+		"txt" : ["black", "white"],
+		"txtcur" : ["white", "black"]
 	},
 	{
 		"title" : "dark",
@@ -24,7 +28,9 @@
 		"bac" : ["white", "black"],
 		"tab" : ["white", "black"],
 		"cur" : ["black", "white"],
-		"tom" : ["black", "red"]
+		"tom" : ["black", "red"],
+		"txt" : ["red", "black"],
+		"txtcur" : ["black", "white"]
 	},
 	{
 		"title" : "ice",
@@ -33,6 +39,8 @@
 		"bac" : ["black", "white"],
 		"tab" : ["white", "black"],
 		"cur" : ["black", "white"],
-		"tom" : ["black", "cyan"]
+		"tom" : ["black", "cyan"],
+		"txt" : ["black", "cyan"],
+		"txtcur" : ["black", "white"]
 	}
 ]
