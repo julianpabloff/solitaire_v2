@@ -4,9 +4,9 @@ const controller = new (require('./js/controller/controller.js'));
 
 //Temporary
 let jsonSettings = {
-	theme: 'ice',
+		theme: 'dark',
 	label: false,
-	draw: 1
+	draw: 3
 };
 const allSettings = {
 	theme: ['normal', 'light', 'dark', 'ice'],
@@ -51,6 +51,9 @@ update.settings = function(command) {
 			display.settings.update(...command.data);
 			break;
 		case 'back':
+			const newSettings = controller.settings.exportChanges(allSettings);
+			applySettings(newSettings);
+			if (newSettings.theme.title != display.theme.title) display.init();
 			controller.menu.reset();
 			switchTo('menu', [0]);
 			return;

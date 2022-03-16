@@ -30,7 +30,7 @@
 		"cur" : ["black", "white"],
 		"tom" : ["black", "red"],
 		"txt" : ["red", "black"],
-		"txtcur" : ["black", "white"]
+		"txtcur" : ["black", "red"]
 	},
 	{
 		"title" : "ice",

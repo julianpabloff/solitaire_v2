@@ -21,7 +21,7 @@ const SettingsDisplay = function(d) {
 	this.importThemes = (themes) => { for (const theme of themes) options[0].push(theme.toUpperCase()) };
 	const preview = require('../../json/preview.json');
 
-	const settings = d.buffer.new(x, y, w, h, 'menu');
+	const settings = d.buffer.new(x, y, w, h, 1);
 	const drawSettings = function(buffer, code) {
 		d.setColor('txt');
 		d.drawSquare(settings, 0, 0, w, h, true);
@@ -70,7 +70,14 @@ const SettingsDisplay = function(d) {
 				d.buffer.setColor(color[0], color[1]);
 				const count = item[1];
 				for (let j = 0; j < count; j++) {
-					settings.write(preview.text[textIndex][position]);
+					let char = preview.text[textIndex][position];
+					if (!labels) {
+						switch(char.charCodeAt(0)) {
+							case 9824: case 9827: case 9829: case 9830:
+								char = ' ';
+						}
+					}
+					settings.write(char);
 					position++;
 				}
 			}

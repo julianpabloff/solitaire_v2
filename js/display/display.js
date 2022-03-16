@@ -30,7 +30,7 @@ const Display = function() {
 	this.buffer = new BufferManager();
 	this.menu = new MenuDisplay(this);
 	this.settings = new SettingsDisplay(this);
-	const background = this.buffer.new(0, 0, columns, rows, 'menu', 0);
+	const background = this.buffer.new(0, 0, columns, rows);
 
 	this.themes = require('../../json/themes.json');
 	this.getTheme = function(name) {
@@ -63,6 +63,10 @@ const Display = function() {
 		return buffer;
 	}
 
+	const debug = this.buffer.new(0, 0, columns, 2, 1);
+	this.debug = function(item) {
+		debug.draw(item, 0, 0, 'yellow').render();
+	}
 }
 
 module.exports = Display;

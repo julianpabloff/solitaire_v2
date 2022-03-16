@@ -25,8 +25,8 @@ const MenuDisplay = function(d) {
 	let logo, options;
 	this.setSize();
 
-	const logoBuffer = d.buffer.new(logo.x, logo.y, logo.w, logo.h, 'menu', 1);
-	const optionsBuffer = d.buffer.new(options.x, options.y, options.w, options.h, 'menu', 1);
+	const logoBuffer = d.buffer.new(logo.x, logo.y, logo.w, logo.h, 1);
+	const optionsBuffer = d.buffer.new(options.x, options.y, options.w, options.h, 1);
 
 	this.start = function(index = 0) {
 		d.setColor('txt');

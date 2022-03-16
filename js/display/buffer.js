@@ -10,7 +10,7 @@ const BufferManager = function() {
 		return low;
 	}
 	this.screens = {};
-	this.new = function(x, y, width, height, screen = 'main', zIndex = 0) {
+	this.new = function(x, y, width, height, zIndex = 0, screen = 'main') {
 		if (!this.screen) this.screen = screen;
 		if (!this.screens[screen]) this.screens[screen] = [];
 		const zArray = this.screens[screen];

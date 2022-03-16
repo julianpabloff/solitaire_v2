@@ -38,6 +38,15 @@ const SettingsController = function(c) {
 		const data = [this.buffer, this.code];
 		return c.outputCommand('move', data);
 	}
+	this.exportChanges = function(allSettings) {
+		let output = {};
+		let i = 0;
+		for (let k of Object.keys(allSettings)) {
+			output[k] = allSettings[k][this.code[i]];
+			i++;
+		}
+		return output;
+	}
 }
 
 module.exports = SettingsController;
