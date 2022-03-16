@@ -269,6 +269,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 			outputColor = colorCode;
 			manager.lastRenderedColor = colorCode;
 			mark = this.indexToScreen(i);
+			if (i < this.size) this.current[i] = this.colors[i] = this.previous[i] = this.prevColors[i] = 0;
 		}
 	}
 	// For adding to the canvas without it clearing

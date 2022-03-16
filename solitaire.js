@@ -5,11 +5,29 @@ const controller = new (require('./js/controller/controller.js'));
 display.init();
 display.menu.start();
 
+//Temporary
+let jsonSettings = {
+	theme: 'normal',
+	label: false,
+	draw: 1
+};
+const allSettings = {
+	theme: ['normal', 'light', 'dark', 'ice'],
+	label: [true, false],
+	draw: [1, 3]
+};
+for (const k of Object.keys(allSettings))
+	controller.settings.counts.push(allSettings[k].length);
+for (const k of Object.keys(jsonSettings))
+	controller.settings.code.push(allSettings[k].indexOf(jsonSettings[k]));
+display.settings.importThemes(allSettings.theme);
+
 const update = {};
 update.menu = function(command) {
 	switch (command) {
 		case 'settings' :
-			switchTo('settings');
+			const data = [controller.settings.buffer, controller.settings.code];
+			switchTo('settings', data);
 			break;
 		case 'quit' :
 			display.exit();
@@ -20,13 +38,24 @@ update.menu = function(command) {
 	}
 }
 update.settings = function(command) {
-	console.log(command);
+	switch(command) {
+		case 'move' :
+			break;
+		case 'preview' :
+			break;
+		case 'back' :
+			controller.menu.reset();
+			switchTo('menu', [0]);
+			return;
+	}
+	const data = [controller.settings.buffer, controller.settings.code];
+	display.settings.update(...data);
 }
 
 let screen = 'menu';
-function switchTo(destination) {
+function switchTo(destination, data = []) {
 	display[screen].clear();
-	display[destination].start();
+	display[destination].start(...data);
 	screen = destination;
 }
 

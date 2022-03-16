@@ -1,0 +1,38 @@
+[
+	{
+		"title" : "normal",
+		"one" : ["white", "red"],
+		"two" : ["white", "black"],
+		"bac" : ["black", "white"],
+		"tab" : ["black", "green"],
+		"cur" : ["black", "white"],
+		"tom" : ["white", "black"]
+	},
+	{
+		"title" : "light",
+		"one" : ["red", "white"],
+		"two" : ["black", "white"],
+		"bac" : ["black", "white"],
+		"tab" : ["black", "white"],
+		"cur" : ["white", "black"],
+		"tom" : ["white", "red"]
+	},
+	{
+		"title" : "dark",
+		"one" : ["red", "black"],
+		"two" : ["white", "black"],
+		"bac" : ["white", "black"],
+		"tab" : ["white", "black"],
+		"cur" : ["black", "white"],
+		"tom" : ["black", "red"]
+	},
+	{
+		"title" : "ice",
+		"one" : ["black", "cyan"],
+		"two" : ["white", "blue"],
+		"bac" : ["black", "white"],
+		"tab" : ["white", "black"],
+		"cur" : ["black", "white"],
+		"tom" : ["black", "cyan"]
+	}
+]

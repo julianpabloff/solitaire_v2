@@ -11,50 +11,31 @@ const SettingsController = function(c) {
 	}
 	this.up = this.down = this.enter = this.esc = false;
 
-	let buffer = [0];
-	let counts = [];
-	let code;
+	this.buffer = [0];
+	this.counts = [];
+	this.code = [];
 	
 	this.handleScreen = function() {
-		const length = buffer.length;
+		const length = this.buffer.length;
+		const prevBuffer = [this.buffer[0], this.buffer[1]];
 		if (length == 1) {
-			if (this.up) buffer[0] = c.cycle(buffer[0], counts.length, false);
-			else if (this.down) buffer[0] = c.cycle(buffer[0], counts.length);
-			else if (this.enter) buffer.push(code[buffer[0]]);
+			if (this.up) this.buffer[0] = c.cycle(this.buffer[0], this.counts.length, false);
+			else if (this.down) this.buffer[0] = c.cycle(this.buffer[0], this.counts.length);
+			else if (this.enter) this.buffer.push(this.code[this.buffer[0]]);
+			else if (this.esc) return c.outputCommand('back');
 		} else if (length == 2) {
-			if (this.up) buffer[1] = c.cycle(buffer[1], counts[buffer[0]], false);
-			else if (this.down) buffer[1] = c.cycle(buffer[1], counts[buffer[0]]);
+			if (this.up) this.buffer[1] = c.cycle(this.buffer[1], this.counts[this.buffer[0]], false);
+			else if (this.down) this.buffer[1] = c.cycle(this.buffer[1], this.counts[this.buffer[0]]);
 			else if (this.enter) {
 				this.code[this.buffer[0]] = this.buffer[1];
 				this.buffer.pop();
-			}
+				if (this.buffer[0] == 0 || this.buffer[0] == 1) return c.outputCommand('preview');
+			} else if (this.esc) this.buffer.pop();
 		}
-		return c.outputCommand(buffer);
+		// if (this.buffer[0] != prevBuffer[0] || this.buffer[1] != prevBuffer[1])
+		// 	return false;
+		return c.outputCommand('move');
 	}
-
-	let jsonSettings = {
-		theme: 'normal',
-		label: false,
-		draw: 1
-	};
-	const allSettings = {
-		theme: ['normal', 'light', 'dark', 'ice'],
-		label: [true, false],
-		draw: [1, 3]
-	};
-	this.importSettings = function(settings) {
-		for (let k of Object.keys(settings))
-			counts.push(settings[k].length);
-	}
-	this.importSettings(allSettings);
-	this.generateSettingsCode = function(settings) {
-		const output = [];
-		for (let k of Object.keys(settings)) {
-			output.push(allSettings[k].indexOf(settings[k]));
-		}
-		code = output;
-	}
-	this.generateSettingsCode(jsonSettings);
 }
 
 module.exports = SettingsController;
