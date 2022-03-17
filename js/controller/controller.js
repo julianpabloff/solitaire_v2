@@ -1,9 +1,11 @@
 const MenuController = require('./menu_controller.js');
 const SettingsController = require('./settings_controller.js');
+const GameController = require('./game_controller.js');
 
 const Controller = function() {
 	this.menu = new MenuController(this);
 	this.settings = new SettingsController(this);
+	this.game = new GameController(this);
 
 	this.cycle = function(number, count, up = true) {
 		const max = count - 1;

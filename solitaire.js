@@ -1,20 +1,22 @@
 const keypress = require('keypress');
+const game = new (require('./js/game.js'));
 const display = new (require('./js/display/display.js'));
 const controller = new (require('./js/controller/controller.js'));
 
 //Temporary
 let jsonSettings = {
-		theme: 'dark',
+	theme: 'candy',
 	label: false,
 	draw: 3
 };
 const allSettings = {
-	theme: ['normal', 'light', 'dark', 'ice'],
+	theme: ['normal', 'light', 'dark', 'ice', 'candy'],
 	label: [true, false],
 	draw: [1, 3]
 };
 function applySettings(settings) {
 	display.setTheme(settings.theme);
+	game.drawAmount = settings.draw;
 }
 for (const k of Object.keys(allSettings))
 	controller.settings.counts.push(allSettings[k].length);
@@ -29,17 +31,22 @@ display.menu.start();
 const update = {};
 update.menu = function(command) {
 	switch (command.type) {
+		case 'newGame': 
+			game.shuffle().dealCards();
+			display.game.debug(game.piles);
+			const data = [{
+				piles: game.piles
+			}];
+			switchTo('game', data);
+			break;
 		case 'move': display.menu.update(command.data); break;
 		case 'settings':
-			// const data = [controller.settings.buffer, controller.settings.code];
 			switchTo('settings', command.data);
 			break;
 		case 'quit':
 			display.exit();
 			console.clear();
 			process.exit();
-			break;
-		// default: display.menu.update(command);
 	}
 }
 update.settings = function(command) {
@@ -52,14 +59,17 @@ update.settings = function(command) {
 			break;
 		case 'back':
 			const newSettings = controller.settings.exportChanges(allSettings);
+			const themeChanged = newSettings.theme != display.theme.title;
 			applySettings(newSettings);
-			if (newSettings.theme.title != display.theme.title) display.init();
 			controller.menu.reset();
+			controller.settings.reset();
+			if (themeChanged) display.init();
 			switchTo('menu', [0]);
-			return;
 	}
-	// const data = [controller.settings.buffer, controller.settings.code];
-	// display.settings.update(...data);
+}
+update.game = function(command) {
+	switch (command.type) {
+	}
 }
 
 let screen = 'menu';

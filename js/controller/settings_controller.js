@@ -38,6 +38,7 @@ const SettingsController = function(c) {
 		const data = [this.buffer, this.code];
 		return c.outputCommand('move', data);
 	}
+	this.reset = () => this.buffer = [0];
 	this.exportChanges = function(allSettings) {
 		let output = {};
 		let i = 0;

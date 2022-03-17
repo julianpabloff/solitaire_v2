@@ -23,11 +23,12 @@ const MenuController = function(c) {
 		} else if (this.esc) return c.outputCommand('quit');
 		else if (this.enter) {
 			switch(menuOption) {
-				case 2 : 
+				case 0: return c.outputCommand('newGame');
+				case 2: 
 					const data = [c.settings.buffer, c.settings.code];
 					return c.outputCommand('settings', data);
-				case 3 : return c.outputCommand('quit');
-				default : return false;
+				case 3: return c.outputCommand('quit');
+				default: return false;
 			}
 		}
 	}

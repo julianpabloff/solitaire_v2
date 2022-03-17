@@ -1,5 +1,6 @@
 const BufferManager = require('./buffer.js');
 const MenuDisplay = require('./menu_display.js');
+const GameDisplay = require('./game_display.js');
 const SettingsDisplay = require('./settings_display.js');
 
 const Display = function() {
@@ -9,8 +10,6 @@ const Display = function() {
 		background.fill(this.theme['tab'][1]).simpleRender();
 	}
 	this.exit = function(screen = 'menu') {
-		// this[screen].exit();
-		// stdout.write('\x1b[?25h\x1b[0m\x1b[2J');
 		process.stdout.write('\x1b[?25h\x1b[0m');
 		process.stdout.cursorTo(0,0);
 	}
@@ -29,6 +28,7 @@ const Display = function() {
 
 	this.buffer = new BufferManager();
 	this.menu = new MenuDisplay(this);
+	this.game = new GameDisplay(this);
 	this.settings = new SettingsDisplay(this);
 	const background = this.buffer.new(0, 0, columns, rows);
 
@@ -50,7 +50,7 @@ const Display = function() {
 		thin: {tl: '┌', tr: '┐', bl: '└', br: '┘', h: '─', v: '│'},
 		thick: {tl: '┌', tr: '┐', bl: '└', br: '┘', h: '─', v: '│'}
 	};
-	this.drawSquare = function(buffer, x, y, width, height, fill, border = 'thin') {
+	this.drawSquare = function(buffer, x, y, width, height, fill = true, border = 'thin') {
 		let piece = squareElements[border];
 		buffer.draw(piece.tl + piece.h.repeat(width - 2) + piece.tr, x, y);
 

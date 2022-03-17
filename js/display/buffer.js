@@ -363,8 +363,41 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		}
 	}
 
+	this.roll = function(amount) {
+		this.size += this.width * amount;
+	}
+
 	// These parameters are all deltas. Width/height gets added to right/bottom
-	this.transform = function(width, height = 0, x = 0, y = 0) {
+	this.transform = function(top, right = 0, bottom = 0, left = 0) {
+		const newX = this.x - left;
+		const newY = this.y - top;
+		const newW = this.width + left + right;
+		const newH = this.height + top + bottom;
+		for (let i = 0; i < this.size; i++) {
+			const screenLocation = this.indexToScreen(i);
+			const x = screenLocation.x; const y = screenLocation.y;
+			const localX = i % this.width;
+			const localY = Math.floor(i / this.width);
+			if (x < newX || x > newX + newW - 1 || y < newY || y > newY + newH - 1) {
+				this.current[i] = 0;
+				this.colors[i] = 0;
+			} else {
+				this.current[i] = this.previous[i];
+				this.colors[i] = this.prevColors[i];
+			};
+		}
+		this.render();
+		const tempBuffer = new Uint16Array(this.previous);
+		const tempColorBuffer = new Uint8Array(this.prevColors);
+		
+	}
+	this.randomFill = function() {
+		for (let i = 0; i < this.size; i++) {
+			const random = Math.random() * 50 + 65;
+			const char = String.fromCharCode(random);
+			this.draw(char, i % this.width, Math.floor(i / this.width));
+		}
+		this.render();
 	}
 
 	// For seeing where it is
