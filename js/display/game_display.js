@@ -48,13 +48,13 @@ const GameDisplay = function(d) {
 		buffer.draw(value, x + 2, y + 1).draw(value, x + 12 - value.length, y + 8);
 	}
 	// STOCK
-	const stock = d.buffer.new(cardX, topY, cardWidth, cardHeight);
+	const stock = d.buffer.new(cardX, topY, cardWidth, cardHeight, 1);
 	const drawStock = function() {
 		drawCardBack(stock, 0, 0);
 		return stock;
 	}
 	// FOUNDATIONS
-	const foundations = d.buffer.new(foundationsX[0], topY, cardWidth * 4 + margin * 3, cardHeight);
+	const foundations = d.buffer.new(foundationsX[0], topY, cardWidth * 4 + margin * 3, cardHeight, 1);
 	const drawFoundations = function() {
 		for (let i = 0; i < 4; i++) {
 			const x = (cardWidth + margin) * i;
@@ -64,34 +64,36 @@ const GameDisplay = function(d) {
 	}
 	// PILES
 	const piles = [];
-	for (let i = 0; i < 7; i++) piles.push(d.buffer.new(cardX + (cardWidth + margin) * i, cardY, cardWidth, d.height - cardY));
+	for (let i = 0; i < 7; i++) piles.push(d.buffer.new(cardX + (cardWidth + margin) * i, cardY, cardWidth, d.height - cardY, 1));
 	const drawPiles = function(pilesData) {
-		drawCard(piles[0], pilesData[0][0], 0, 0);
+		for (let i = 0; i < pilesData.length; i++) {
+			const cards = pilesData[i];
+			for (let j = 0; j < cards.length; j++) drawCard(piles[i], cards[j], 0, 2 * j);
+		}
 	}
 	// NAVIGATION
 	const navigation = d.buffer.new(cardX, topY - 2, totalWidth, 15, 2);
 
-	const debug = d.buffer.new(0, 1, d.width, 7, 1);
-	this.debug = function(piles) {
+	const debug = d.buffer.new(1, 1, 35, 20, 3);
+	const drawDebug = function(piles) {
 		for (let i = 0; i < piles.length; i++) {
-			debug.cursorTo(1, i);
 			const cards = piles[i];
-			for (const card of cards) {
+			for (let c = 0; c < cards.length; c++) {
+				const card = cards[c];
 				d.setColor(card.suit);
-				const cardString = card.value.toString() + card.suit + ' ';
-				debug.write(cardString);
+				const cardString = card.value.toString() + card.suit;
+				debug.draw(cardString + ' '.repeat(3 - cardString.length), 4 * i, c);
 			}
 		}
-		debug.render();
+		return debug;
 	}
 
 	this.start = function(data) {
+		drawDebug(data.piles).simpleRender();
 		drawFoundations().simpleRender();
 		drawStock().simpleRender();
-		// for (const pile of piles) pile.fill('red').simpleRender();
 		drawPiles(data.piles);
 		for (const pile of piles) pile.simpleRender();
-		// navigation.outline('green');
 	}
 }
 

@@ -33,7 +33,6 @@ update.menu = function(command) {
 	switch (command.type) {
 		case 'newGame': 
 			game.shuffle().dealCards();
-			display.game.debug(game.piles);
 			const data = [{
 				piles: game.piles
 			}];

@@ -14,6 +14,7 @@ const GameController = function(c) {
 	this.handleScreen = function() {
 		if (this.up) return c.outputCommand('up');
 		else if (this.down) return c.outputCommand('down');
+		return false;
 	}
 }
 

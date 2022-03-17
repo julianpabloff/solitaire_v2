@@ -63,7 +63,7 @@ const Display = function() {
 		return buffer;
 	}
 
-	const debug = this.buffer.new(0, 0, columns, 2, 1);
+	const debug = this.buffer.new(0, this.height - 1, columns, 2, 1);
 	this.debug = function(item) {
 		debug.draw(item, 0, 0, 'yellow').render();
 	}

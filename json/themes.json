@@ -54,7 +54,7 @@
 	{
 		"title" : "candy",
 		"h" : ["white", "red"],
-		"c" : ["white", "green"],
+		"c" : ["black", "green"],
 		"d" : ["white", "blue"],
 		"s" : ["white", "black"],
 		"bac" : ["black", "white"],

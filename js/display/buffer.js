@@ -31,16 +31,18 @@ const BufferManager = function() {
 		}
 	}
 	this.logScreens = function() {
-		for (const [name, screens] of Object.entries(this.screens)) {
-			console.log();
-			console.log(name);
-			for (const screen of screens) {
-				console.log('----');
-				console.log('x,y: ' + screen.x + ',' + screen.y);
-				console.log('w,h: ' + screen.width + ',' + screen.height);
-				console.log(screen.outlined ? 'outlined' : 'not outlined');
-			}
-		}
+		console.log();
+		console.log(this.screens);
+		// for (const [name, screens] of Object.entries(this.screens)) {
+		// 	console.log();
+		// 	console.log(name);
+		// 	for (const screen of screens) {
+		// 		console.log('----');
+		// 		console.log('x,y: ' + screen.x + ',' + screen.y);
+		// 		console.log('w,h: ' + screen.width + ',' + screen.height);
+		// 		console.log(screen.outlined ? 'outlined' : 'not outlined');
+		// 	}
+		// }
 	}
 	this.somethingAbove = function(target, x, y) {
 		const zArray = this.screens[this.screen];
