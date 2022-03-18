@@ -48,13 +48,13 @@ const GameDisplay = function(d) {
 		buffer.draw(value, x + 2, y + 1).draw(value, x + 12 - value.length, y + 8);
 	}
 	// STOCK
-	const stock = d.buffer.new(cardX, topY, cardWidth, cardHeight, 1);
+	const stock = d.buffer.new(cardX, topY, cardWidth, cardHeight, 1, 'game');
 	const drawStock = function() {
 		drawCardBack(stock, 0, 0);
 		return stock;
 	}
 	// FOUNDATIONS
-	const foundations = d.buffer.new(foundationsX[0], topY, cardWidth * 4 + margin * 3, cardHeight, 1);
+	const foundations = d.buffer.new(foundationsX[0], topY, cardWidth * 4 + margin * 3, cardHeight, 1, 'game');
 	const drawFoundations = function() {
 		for (let i = 0; i < 4; i++) {
 			const x = (cardWidth + margin) * i;
@@ -64,7 +64,8 @@ const GameDisplay = function(d) {
 	}
 	// PILES
 	const piles = [];
-	for (let i = 0; i < 7; i++) piles.push(d.buffer.new(cardX + (cardWidth + margin) * i, cardY, cardWidth, d.height - cardY, 1));
+	for (let i = 0; i < 7; i++)
+		piles.push(d.buffer.new(cardX + (cardWidth + margin) * i, cardY, cardWidth, d.height - cardY, 1, 'game'));
 	const drawPiles = function(pilesData) {
 		for (let i = 0; i < pilesData.length; i++) {
 			const cards = pilesData[i];
@@ -72,9 +73,9 @@ const GameDisplay = function(d) {
 		}
 	}
 	// NAVIGATION
-	const navigation = d.buffer.new(cardX, topY - 2, totalWidth, 15, 2);
+	const navigation = d.buffer.new(cardX, topY - 2, totalWidth, 15, 2, 'game');
 
-	const debug = d.buffer.new(1, 1, 35, 20, 3);
+	const debug = d.buffer.new(1, 1, 35, 20, 3, 'game');
 	const drawDebug = function(piles) {
 		for (let i = 0; i < piles.length; i++) {
 			const cards = piles[i];
@@ -89,11 +90,15 @@ const GameDisplay = function(d) {
 	}
 
 	this.start = function(data) {
+		// d.buffer.renderScreen('game');
 		drawDebug(data.piles).simpleRender();
 		drawFoundations().simpleRender();
 		drawStock().simpleRender();
 		drawPiles(data.piles);
 		for (const pile of piles) pile.simpleRender();
+	}
+	this.up = function() {
+		// d.buffer.setBackground2('red', 'game');
 	}
 }
 
