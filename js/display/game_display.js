@@ -90,14 +90,19 @@ const GameDisplay = function(d) {
 	}
 
 	this.start = function(data) {
-		// d.buffer.renderScreen('game');
-		drawDebug(data.piles).simpleRender();
-		drawFoundations().simpleRender();
-		drawStock().simpleRender();
+		const timestamp = Date.now();
+		this.draw();
+		d.buffer.renderScreen('game', d.theme['tab'][1]);
+		d.debug((Date.now() - timestamp).toString());
+	}
+	this.draw = function(data) {
+		// drawDebug(data.piles);
+		drawFoundations();
+		drawStock();
 		drawPiles(data.piles);
-		for (const pile of piles) pile.simpleRender();
 	}
 	this.up = function() {
+		d.buffer.renderScreen('game', d.theme['tab'][1]);
 		// d.buffer.setBackground2('red', 'game');
 	}
 }

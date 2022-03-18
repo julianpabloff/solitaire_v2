@@ -5,7 +5,7 @@ const controller = new (require('./js/controller/controller.js'));
 
 //Temporary
 let jsonSettings = {
-	theme: 'dark',
+	theme: 'normal',
 	label: false,
 	draw: 3
 };
@@ -40,6 +40,8 @@ update.menu = function(command) {
 			break;
 		case 'move': display.menu.update(command.data); break;
 		case 'settings':
+			// display.settings.preDraw(...command.data);
+			// display.menu.dynamicClear();
 			switchTo('settings', command.data);
 			break;
 		case 'quit':
@@ -74,8 +76,10 @@ update.game = function(command) {
 
 let screen = 'menu';
 function switchTo(destination, data = []) {
-	display[screen].clear();
-	display[destination].start(...data);
+	// display[screen].clear();
+	// display[destination].start(...data);
+	display[destination].draw(...data);
+	display.buffer.dynamicSwitch(destination);
 	screen = destination;
 }
 

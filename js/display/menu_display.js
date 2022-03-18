@@ -28,15 +28,6 @@ const MenuDisplay = function(d) {
 	const logoBuffer = d.buffer.new(logo.x, logo.y, logo.w, logo.h, 1, 'menu');
 	const optionsBuffer = d.buffer.new(options.x, options.y, options.w, options.h, 1, 'menu');
 
-	this.start = function(index = 0) {
-		d.setColor('txt');
-		d.drawSquare(logoBuffer, 0, 0, logo.w, logo.h, true);
-		for (let i = 0; i < logoText.length; i++)
-			logoBuffer.draw(logoText[i], 1, 2 + i);
-		logoBuffer.simpleRender();
-		drawMenu(index);
-		optionsBuffer.simpleRender();
-	}
 	const drawMenu = function(index) {
 		d.setColor('txt');
 		d.drawSquare(optionsBuffer, 0, 0, options.w, options.h, true);
@@ -48,14 +39,32 @@ const MenuDisplay = function(d) {
 			optionsBuffer.draw(output, 1, 2 * i + 1);
 		}
 	}
+	this.start = function(index = 0) {
+		d.buffer.screen = 'menu';
+		this.draw(index);
+		logoBuffer.render();
+		optionsBuffer.render();
+	}
 	this.update = function(index = 0) {
 		drawMenu(index);
 		optionsBuffer.render();
 	}
 	this.clear = function() {
-		const color = d.theme['tab'][1];
-		logoBuffer.fill(color).simpleRender();
-		optionsBuffer.fill(color).simpleRender();
+		// const color = d.theme['tab'][1];
+		// logoBuffer.fill(color);
+		// optionsBuffer.fill(color);
+		logoBuffer.clear();
+		optionsBuffer.clear();
+	}
+	this.draw = function(index = 0) {
+		d.setColor('txt');
+		d.drawSquare(logoBuffer, 0, 0, logo.w, logo.h, true);
+		for (let i = 0; i < logoText.length; i++)
+			logoBuffer.draw(logoText[i], 1, 2 + i);
+		drawMenu(index);
+	}
+	this.dynamicClear = function() {
+		d.buffer.dynamicSwitch('settings');
 	}
 }
 

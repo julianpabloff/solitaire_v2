@@ -85,7 +85,7 @@ const SettingsDisplay = function(d) {
 	}
 	this.start = function(buffer, code) {
 		drawSettings(buffer, code);
-		settings.simpleRender();
+		settings.render();
 	}
 	this.update = function(buffer, code) {
 		drawSettings(buffer, code);
@@ -93,7 +93,10 @@ const SettingsDisplay = function(d) {
 	}
 	this.clear = function() {
 		const color = d.theme['tab'][1];
-		settings.fill(color).simpleRender();
+		settings.fill(color);
+	}
+	this.draw = function(buffer, code) {
+		drawSettings(buffer, code);
 	}
 }
 

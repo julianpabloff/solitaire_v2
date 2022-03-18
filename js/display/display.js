@@ -7,7 +7,8 @@ const Display = function() {
 	this.init = function() {
 		process.stdout.write('\x1b[2J');
 		process.stdout.write('\x1b[?25l');
-		background.fill(this.theme['tab'][1]).simpleRender();
+		background.fill(this.theme['tab'][1], ' ');
+		// background.fill(this.theme['tab'][1], '.', this.theme['tom'][1]);
 	}
 	this.exit = function(screen = 'menu') {
 		process.stdout.write('\x1b[?25h\x1b[0m');
@@ -30,7 +31,7 @@ const Display = function() {
 	this.menu = new MenuDisplay(this);
 	this.game = new GameDisplay(this);
 	this.settings = new SettingsDisplay(this);
-	const background = this.buffer.new(0, 0, columns, rows);
+	const background = this.buffer.new(0, 0, columns, rows, 0, 'all');
 
 	this.themes = require('../../json/themes.json');
 	this.getTheme = function(name) {

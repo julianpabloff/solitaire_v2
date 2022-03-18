@@ -1,5 +1,5 @@
 const BufferManager = function() {
-	function sortedIndex(array, value) {
+	this.sortedIndex = function(array, value) {
 		let low = 0;
         let high = array.length;
 		while (low < high) {
@@ -16,7 +16,7 @@ const BufferManager = function() {
 		if (!this.screens[screen]) this.screens[screen] = [];
 		const zArray = this.screens[screen];
 		const buffer = new DisplayBuffer(x, y, width, height, this, screen, zIndex);
-		if (zArray.length > 0) zArray.splice(sortedIndex(zArray, zIndex), 0, buffer);
+		if (zArray.length > 0) zArray.splice(this.sortedIndex(zArray, zIndex), 0, buffer);
 		else zArray.push(buffer);
 		return buffer;
 	}
@@ -31,11 +31,50 @@ const BufferManager = function() {
 			if (buffer.hidden) buffer.show();
 		}
 	}
+	this.dynamicSwitch = function(screen, prevScreen = this.screen) {
+		const width = process.stdout.columns;
+		const height = process.stdout.rows;
+		const size = width * height;
+		const buffersToRender = [];
+		for (let i = 0; i < size; i++) {
+			const x = i % width; const y = Math.floor(i / width);
+			const current = this.somethingHere(prevScreen, x, y);
+			const next = this.somethingHere(screen, x, y, false);
+			if (current && next) {
+				const buffer = current.buffer;
+				const index = buffer.screenToIndex(x, y);
+				buffer.current[index] = buffer.previous[index];
+				buffer.colors[index] = buffer.prevColors[index];
+				let addedToRenderQueue = false;
+				for (const b of buffersToRender)
+					if (b.id == buffer.id) {
+						addedToRenderQueue = true;
+						break;
+					}
+				if (!addedToRenderQueue) buffersToRender.push(buffer);
+			}
+		}
+		for (const buffer of this.screens[prevScreen]) buffer.render().reset();
+		setTimeout(() => {
+			for (const buffer of this.screens[screen]) buffer.render();
+			this.screen = screen;
+		}, 1000);
+	}
 	this.logScreens = function() {
 		console.log(this.screens);
 	}
+
+	// Other Buffers
 	this.somethingAbove = function(target, x, y) {
-		const zArray = this.screens[this.screen];
+		const screenArray = this.screens[this.screen];
+		const allScreen = this.screens['all'];
+		let zArray = [];
+		for (const buffer of screenArray) zArray.push(buffer);
+		if (allScreen) {
+			for (const buffer of allScreen)
+				zArray.splice(this.sortedIndex(zArray, buffer.zIndex), 0, buffer);
+		}
+		// const zArray = this.screens[this.screen];
 		if (zArray.length < 2) return false;
 		let found = false;
 		for (const buffer of zArray) {
@@ -49,7 +88,19 @@ const BufferManager = function() {
 		return false;
 	}
 	this.somethingBelow = function(target, x, y) {
-		const zArray = this.screens[this.screen];
+		const screenArray = this.screens[this.screen];
+		const allScreen = this.screens['all'];
+		let zArray = [];
+		for (const buffer of screenArray) zArray.push(buffer);
+		if (allScreen) {
+			for (const buffer of allScreen)
+				zArray.splice(this.sortedIndex(zArray, buffer.zIndex), 0, buffer);
+		}
+		// process.stdout.write('\x1b[2J');
+		// process.stdout.write('\x1b[?25l');
+		// process.stdout.cursorTo(0,0);
+		// console.log(zArray);
+		// process.exit();
 		if (zArray.length < 2) return false;
 		let found = false;
 		for (let i = zArray.length - 1; i >= 0; i--) {
@@ -59,9 +110,21 @@ const BufferManager = function() {
 				const code = buffer.previous[index];
 				const color = buffer.prevColors[index];
 				if (code != 0 || color != 0) return { char: code, color: color };
-				else if (!buffer.transparent) return false;
+				// else if (!buffer.transparent) return false;
 			}
 			if (buffer.id == target.id) found = true; 
+		}
+		return false;
+	}
+	this.somethingHere = function(screen, x, y, previous = true) {
+		const zArray = this.screens[screen];
+		for (const buffer of zArray) {
+			const index = buffer.screenToIndex(x, y);
+			if (index != null) {
+				const code = previous ? buffer.previous[index] : buffer.current[index];
+				const color = previous ? buffer.prevColors[index] : buffer.colors[index];
+				if (code != 0 || color != 0) return { char: code, color: color, buffer: buffer };
+			}
 		}
 		return false;
 	}
@@ -88,56 +151,45 @@ const BufferManager = function() {
 		} while (i < area);
 	}
 
-	const multiRender = function(buffers) {
+	this.renderScreen = function(screenName, background) {
+		const timestamp = Date.now();
+		const screenCoorindates = function(index) {
+			return { x: index % width, y: Math.floor(index / width) }
+		}
+		const buffers = this.screens[screenName];
 		const start = Date.now();
-		process.stdout.write('\x1b[42m');
-		const rows = process.stdout.rows;
-		const columns = process.stdout.columns;
-		// for (let i = 0; i < rows; i++) {
-		// 	process.stdout.cursorTo(0, i);
-		// 	process.stdout.write(' '.repeat(columns));
-		// }
+		const width = process.stdout.columns;
+		const height = process.stdout.rows;
 		const output = [];
-		const size = rows * columns;
+		const size = height * width;
 		for (let i = 0; i < size - 1; i++) {
-			if ((i + 1) % columns == 0) output.push('\n');
-			output.push(' ');
+			const x = i % width; const y = Math.floor(i / width);
+			const point = this.somethingHere(screenName, x, y);
+			if (point) {
+				const fgCode = point.color >> 4;
+				const bgCode = point.color & 0x0F;
+				if (point.color != this.lastRenderedColor) {
+					if (fgCode == 0 || bgCode == 0) output.push(this.resetColorString);
+					if (fgCode > 0) output.push(this.fgToString(fgCode));
+					if (bgCode > 0) output.push(this.bgToString(bgCode));
+				}
+				output.push(String.fromCharCode(point.char));
+				this.lastRenderedColor = point.color;
+			} else {
+				const backgroundCode = this.colors[background];
+				const lastBgCode = this.lastRenderedColor & 0x0F;
+				if (backgroundCode != lastBgCode) output.push(this.bgToString(backgroundCode));
+				output.push(' ');
+				this.lastRenderedColor = (this.lastRenderedColor & 0xF0) + backgroundCode;
+			}
+			if ((i + 1) % width == 0) output.push('\n');
 		}
 		process.stdout.cursorTo(0, 0);
 		process.stdout.write(output.join(''));
 
 		process.stdout.write('\x1b[30m');
-		process.stdout.cursorTo(1, 1);
-		process.stdout.write((Date.now() - start).toString());
-	}
-	this.renderScreen = function(screenName) {
-		multiRender(this.screens[screenName]);
-	}
-
-	// Colors
-	this.color = 0;
-	this.lastRenderedColor = 0;
-	this.lastRenderedLocation = {x: 0, y: 0};
-	this.colors = { reset: 0, black: 1, red: 2, green: 3, yellow: 4, blue: 5, magenta: 6, cyan: 7, white: 8 };
-	this.setFg = function(color) {
-		const fgCode = this.colors[color];
-		this.color = (fgCode << 4) + (this.color & 0x0F);
-		return this.color;
-	}
-	this.setBg = function(color) {
-		const bgCode = this.colors[color];
-		this.color = (this.color & 0xF0) + bgCode;
-		return this.color;
-	}
-	this.setColor = function(foreground, background) {
-		const fgCode = this.colors[foreground];
-		const bgCode = this.colors[background];
-		this.color = (fgCode << 4) + bgCode;
-		return this.color;
-	}
-	this.setColorCode = code => this.color = code;
-	this.resetColor = function() {
-		this.color = 0;
+		process.stdout.cursorTo(1, 10);
+		process.stdout.write((Date.now() - timestamp).toString());
 	}
 	this.setBackground = function(color, screen) {
 		const timestamp = Date.now();
@@ -184,34 +236,35 @@ const BufferManager = function() {
 			return { x: index % width, y: Math.floor(index / width) }
 		}
 	}
-	this.setBackground2 = function(color, screen) {
-		// process.stdout.cursorTo(0,0);
-		// process.stdout.write('X\x1b[4;4Hthe');
-		output = [];
-		function move(x, y) { output.push('\x1b[' + (y + 1).toString() + ';' + (x + 1).toString() + 'H'); }
-		function write(string) { output.push(string); }
-		move(0,0);
 
-		const width = process.stdout.columns;
-		const height = process.stdout.rows;
-		for (let i = 0; i < height; i++) {
-			for (let j = 0; j < width; j += 2) {
-				move(j, i);
-				write('X');
-			}
-		}
-		process.stdout.write(output.join(''));
+	// Colors
+	this.color = 0;
+	this.lastRenderedColor = 0;
+	this.lastRenderedLocation = {x: 0, y: 0};
+	this.colors = { reset: 0, black: 1, red: 2, green: 3, yellow: 4, blue: 5, magenta: 6, cyan: 7, white: 8 };
+	this.setFg = function(color) {
+		const fgCode = this.colors[color];
+		this.color = (fgCode << 4) + (this.color & 0x0F);
+		return this.color;
 	}
-	this.setBackground3 = function(color, screen) {
-		const width = process.stdout.columns;
-		const height = process.stdout.rows;
-		for (let i = 0; i < height; i++) {
-			for (let j = 0; j < width; j += 2) {
-				process.stdout.cursorTo(j, i);
-				process.stdout.write('X');
-			}
-		}
+	this.setBg = function(color) {
+		const bgCode = this.colors[color];
+		this.color = (this.color & 0xF0) + bgCode;
+		return this.color;
 	}
+	this.setColor = function(foreground, background) {
+		const fgCode = this.colors[foreground];
+		const bgCode = this.colors[background];
+		this.color = (fgCode << 4) + bgCode;
+		return this.color;
+	}
+	this.setColorCode = code => this.color = code;
+	this.resetColor = function() {
+		this.color = 0;
+	}
+	this.fgToString = code => '\x1b[' + (29 + code).toString() + 'm';
+	this.bgToString = code => '\x1b[' + (39 + code).toString() + 'm';
+	this.resetColorString = '\x1b[0m';
 }
 
 const crypto = require('crypto');
@@ -230,10 +283,13 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 	this.transparent = true;
 	this.id = crypto.randomBytes(32);
 
-	this.current = new Uint16Array(this.size);
-	this.previous = new Uint16Array(this.size);
-	this.colors = new Uint8Array(this.size);
-	this.prevColors = new Uint8Array(this.size);
+	this.reset = function() {
+		this.current = new Uint16Array(this.size);
+		this.previous = new Uint16Array(this.size);
+		this.colors = new Uint8Array(this.size);
+		this.prevColors = new Uint8Array(this.size);
+	}
+	this.reset();
 
 	// Coordinates
 	this.coordinateIndex = (x, y) => (y * this.width) + x; // buffer x & y to buffer array index
@@ -313,9 +369,9 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 				const fgCode = drawingColorCode >> 4;
 				const bgCode = drawingColorCode & 0x0F;
 				if (drawingColorCode != manager.lastRenderedColor) {
-					if (fgCode == 0 || bgCode == 0) output.push('\x1b[0m');
-					if (fgCode > 0) output.push('\x1b[' + (29 + fgCode).toString() + 'm');
-					if (bgCode > 0) output.push('\x1b[' + (39 + bgCode).toString() + 'm');
+					if (fgCode == 0 || bgCode == 0) output.push(manager.resetColorString);
+					if (fgCode > 0) output.push(manager.fgToString(fgCode));
+					if (bgCode > 0) output.push(manager.bgToString(bgCode));
 				}
 				const char = String.fromCharCode(drawingCode);
 				const last = manager.lastRenderedLocation;
@@ -331,53 +387,19 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 			this.prevColors[i] = colorCode;
 		}
 		process.stdout.write(output.join(''));
-	}
-	// Prints row by row, each row all at once. Faster for large areas that completely change
-	this.simpleRender = function() {
-		let start = this.indexToScreen(0);
-		let output = []; let outputColor;
-		for (let i = 0; i <= this.size; i++) {
-			let code = this.current[i];
-			let colorCode = this.colors[i];
-			const prevCode = this.previous[i];
-			const prevColorCode = this.prevColors[i];
-			if (code == 0 && prevCode != 0) {
-				code = prevCode;
-				colorCode = prevColorCode;
-			}
-			// i + 1 % this.width -- solution is to look ahead
-			if ((i % this.width == 0 && i > 0) || colorCode != outputColor) {
-				const fgCode = outputColor >> 4;
-				const bgCode = outputColor & 0x0F;
-				if (fgCode == 0 || bgCode == 0) process.stdout.write('\x1b[0m');
-				if (fgCode > 0) process.stdout.write('\x1b[' + (29 + fgCode).toString() + 'm');
-				if (bgCode > 0) process.stdout.write('\x1b[' + (39 + bgCode).toString() + 'm');
-				const string = output.join('');
-				drawToScreen(string, start.x, start.y);
-				start = this.indexToScreen(i);
-				output = [];
-				manager.lastRenderedColor = outputColor = colorCode;
-			}
-			output.push(String.fromCharCode(code));
-			outputColor = colorCode;
-			manager.lastRenderedColor = colorCode;
-			if (i < this.size) {
-				this.current[i] = this.colors[i] = 0;
-				this.previous[i] = code;
-				this.prevColors[i] = colorCode;
-			}
-		}
+		return this;
 	}
 	// For adding to the canvas without it clearing
 	this.paint = function() {
 		this.render(false);
 		return this;
 	}
-	this.fill = function(color, char = ' ') {
+	this.fill = function(color, char = ' ', foreground = null) {
 		this.current.fill(char.charCodeAt(0));
 		manager.setBg(color);
+		if (foreground) manager.setFg(foreground);
 		this.colors.fill(manager.color);
-		return this;
+		this.render();
 	}
 
 	// Saving buffer and reading from the save
