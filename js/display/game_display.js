@@ -75,7 +75,7 @@ const GameDisplay = function(d) {
 	// NAVIGATION
 	const navigation = d.buffer.new(cardX, topY - 2, totalWidth, 15, 2, 'game');
 
-	const debug = d.buffer.new(1, 1, 35, 20, 3, 'game');
+	// const debug = d.buffer.new(1, 1, 35, 20, 3, 'game');
 	const drawDebug = function(piles) {
 		for (let i = 0; i < piles.length; i++) {
 			const cards = piles[i];
@@ -102,8 +102,10 @@ const GameDisplay = function(d) {
 		drawPiles(data.piles);
 	}
 	this.up = function() {
-		d.buffer.renderScreen('game', d.theme['tab'][1]);
+		// d.buffer.logScreens();
+		// d.buffer.renderScreen('game', d.theme['tab'][1]);
 		// d.buffer.setBackground2('red', 'game');
+		d.buffer.renderScreen('game');
 	}
 }
 

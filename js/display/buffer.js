@@ -151,7 +151,7 @@ const BufferManager = function() {
 		} while (i < area);
 	}
 
-	this.renderScreen = function(screenName, background) {
+	this.renderScreenOld = function(screenName, background) {
 		const timestamp = Date.now();
 		const screenCoorindates = function(index) {
 			return { x: index % width, y: Math.floor(index / width) }
@@ -190,6 +190,31 @@ const BufferManager = function() {
 		process.stdout.write('\x1b[30m');
 		process.stdout.cursorTo(1, 10);
 		process.stdout.write((Date.now() - timestamp).toString());
+	}
+	this.renderScreen = function(screen) {
+		const zArray = this.screens[screen];
+		let i = 0;
+		const width = process.stdout.columns;
+		const height = process.stdout.rows;
+		let minX = width; let minY = height;
+		let maxX = 0; let maxY = 0;
+		for (let i = 1; i < zArray.length; i++) {
+			const buffer = zArray[i];
+			const x = buffer.x; const y = buffer.y;
+			if (x < minX) mixX = x; else if (x > maxX) maxX = x;
+			if (y < minY) minY = y; else if (y > maxY) maxY = y;
+			process.stdout.cursorTo(5, 10 + i);
+			console.log(buffer.x + ' ' + buffer.y + ' ' + buffer.width + ' ' + buffer.height);
+		}
+		process.stdout.cursorTo(minX, minY);
+		process.stdout.write('X');
+		process.stdout.cursorTo(minX, minY);
+		process.stdout.write('X');
+		process.stdout.cursorTo(minX, minY);
+		process.stdout.write('X');
+		process.stdout.cursorTo(minX, minY);
+		process.stdout.write('X');
+		console.log(minX, minY, maxX, maxY);
 	}
 	this.setBackground = function(color, screen) {
 		const timestamp = Date.now();
