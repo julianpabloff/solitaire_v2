@@ -5,10 +5,9 @@ const SettingsDisplay = require('./settings_display.js');
 
 const Display = function() {
 	this.init = function() {
-		process.stdout.write('\x1b[2J');
+		// process.stdout.write('\x1b[2J');
 		process.stdout.write('\x1b[?25l');
-		background.fill(this.theme['tab'][1], ' ');
-		// background.fill(this.theme['tab'][1], '.', this.theme['tom'][1]);
+		this.applyBackground();
 	}
 	this.exit = function(screen = 'menu') {
 		process.stdout.write('\x1b[?25h\x1b[0m');
@@ -44,6 +43,10 @@ const Display = function() {
 	this.setColor = function(attribute) {
 		const color = this.theme[attribute];
 		this.buffer.setColor(color[0], color[1]);
+	}
+	this.applyBackground = function() {
+		background.fill(this.theme['tab'][1]);
+		// background.fill(this.theme['tab'][1], '.', this.theme['tom'][1]);
 	}
 
 	const squareElements = {

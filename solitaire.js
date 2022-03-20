@@ -64,13 +64,13 @@ update.settings = function(command) {
 			applySettings(newSettings);
 			controller.menu.reset();
 			controller.settings.reset();
-			if (themeChanged) display.init();
+			if (themeChanged) display.applyBackground();
 			switchTo('menu', [0]);
 	}
 }
 update.game = function(command) {
 	switch (command.type) {
-		case 'up': display.game.up(); break;
+		case 'up': display.game.up(game.piles); break;
 	}
 }
 
@@ -80,6 +80,8 @@ function switchTo(destination, data = []) {
 	// display[destination].start(...data);
 	display[destination].draw(...data);
 	display.buffer.dynamicSwitch(destination);
+	// display.buffer.dynamicClear(destination);
+	// display.buffer.renderScreen(destination);
 	screen = destination;
 }
 

@@ -101,10 +101,12 @@ const GameDisplay = function(d) {
 		drawStock();
 		drawPiles(data.piles);
 	}
-	this.up = function() {
+	this.up = function(piles) {
 		// d.buffer.logScreens();
 		// d.buffer.renderScreen('game', d.theme['tab'][1]);
 		// d.buffer.setBackground2('red', 'game');
+		const data = {piles: piles};
+		this.draw(data);
 		d.buffer.renderScreen('game');
 	}
 }

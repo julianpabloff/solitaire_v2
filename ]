@@ -163,9 +163,9 @@ const BufferManager = function() {
 		process.stdout.cursorTo(1, 10);
 		process.stdout.write((Date.now() - timestamp).toString());
 	}
-	this.dynamicSwitch = function(screen, prevScreen = this.screen) {
+	this.dynamicSwitch = function(screen, prevScreen = this.screen, actuallyDoIt = true) {
 		this.dynamicClear(screen, prevScreen);
-		setTimeout(() => this.renderScreen(screen), 2000);
+		this.renderScreen(screen, actuallyDoIt);
 	}
 	this.dynamicClear = function(screen, prevScreen = this.screen) {
 		const width = process.stdout.columns;
@@ -196,7 +196,7 @@ const BufferManager = function() {
 		this.screen = screen;
 		// }, 1000);
 	}
-	this.renderScreen = function(screen) {
+	this.renderScreen = function(screen, actuallyDoIt = true) {
 		const zArray = this.screens[screen];
 		let i = 0;
 		const windowWidth = process.stdout.columns;
@@ -246,16 +246,16 @@ const BufferManager = function() {
 					this.lastRenderedColor = point.color;
 					this.lastRenderedLocation = {x: x, y: y};
 				}
-				// process.stdout.cursorTo(x, y);
-				// process.stdout.write('X');
-				buffer.current[index] = 0;
-				buffer.colors[index] = 0;
-				buffer.previous[index] = point.char;
-				buffer.prevColors[index] = point.color;
+				process.stdout.cursorTo(x, y);
+				process.stdout.write('X');
+				// buffer.previous[index] = point.char;
+				// buffer.prevColors[index] = point.color;
 			}
 		}
-		process.stdout.cursorTo(minX, minY);
-		process.stdout.write(output.join(''));
+		if (actuallyDoIt) {
+			process.stdout.cursorTo(minX, minY);
+			process.stdout.write(output.join(''));
+		}
 	}
 	this.setBackground = function(color, screen) {
 		const timestamp = Date.now();
