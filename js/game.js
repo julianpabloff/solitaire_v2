@@ -39,6 +39,62 @@ const Game = function() {
 		}
 		return this;
 	}
+	let deckStartOver = false;
+	this.flipDeck = function(forward = true) { // I hate the repetitiveness of this function
+		if (forward) {
+			let i = 0;
+			while (this.stock.length > 0 && i < this.drawAmount) {
+				deckStartOver = false;
+				this.waste.push(this.stock.pop());
+				i++;
+			}
+			this.wasteVisible = this.wasteVisible + (this.waste.length <= 3);
+
+			if (this.stock.length == 0) {
+				if (deckStartOver) {
+					let wasteLength = this.waste.length;
+					for (let i = 0; i < wasteLength; i++) {
+						this.stock.push(this.waste.pop());
+					}
+					this.wasteVisible = 0;
+				} else deckStartOver = true;
+			}
+		} else { // I have yet to implement this.wasteVisible because undoing isn't a thing yet
+			let amount = this.waste.length - Math.floor((this.waste.length - 1) / this.drawAmount) * this.drawAmount;
+			let i = 0;
+			while (this.waste.length > 0 && i < amount) {
+				deckStartOver = false;
+				this.stock.push(this.waste.pop());
+				i++;
+			}
+			if (this.waste.length == 0) {
+				if (deckStartOver) {
+					let stockLength = this.stock.length;
+					for (let i = 0; i < stockLength; i++) {
+						this.waste.push(this.stock.pop());
+					}
+				} else deckStartOver = true;
+			}
+		}
+	}
+	this.getPileData = function() {
+		let output = [];
+		for (let pile of this.piles) {
+			let count = 0;
+			for (let card of pile)
+				if (card.faceUp) count++;
+			output.push(count);
+		}
+		return output;
+	}
+	this.getData = function() {
+		return {
+			stock: this.stock,
+			waste: this.waste,
+			foundations: this.foundations,
+			piles: this.piles,
+		}
+	}
 }
 
 const Card = function(suit, value) {

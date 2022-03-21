@@ -83,17 +83,9 @@ const SettingsDisplay = function(d) {
 			}
 		}
 	}
-	this.start = function(buffer, code) {
-		drawSettings(buffer, code);
-		settings.render();
-	}
 	this.update = function(buffer, code) {
 		drawSettings(buffer, code);
 		settings.render();
-	}
-	this.clear = function() {
-		const color = d.theme['tab'][1];
-		settings.fill(color);
 	}
 	this.draw = function(buffer, code) {
 		drawSettings(buffer, code);

@@ -5,9 +5,9 @@ const controller = new (require('./js/controller/controller.js'));
 
 //Temporary
 let jsonSettings = {
-	theme: 'normal',
+	theme: 'ice',
 	label: false,
-	draw: 3
+	draw: 1
 };
 const allSettings = {
 	theme: ['normal', 'light', 'dark', 'ice', 'candy'],
@@ -33,15 +33,15 @@ update.menu = function(command) {
 	switch (command.type) {
 		case 'newGame': 
 			game.shuffle().dealCards();
+			controller.game.pileCounts = game.getPileData();
 			const data = [{
-				piles: game.piles
+				cards: game.getData(),
+				buffer: controller.game.buffer
 			}];
 			switchTo('game', data);
 			break;
 		case 'move': display.menu.update(command.data); break;
 		case 'settings':
-			// display.settings.preDraw(...command.data);
-			// display.menu.dynamicClear();
 			switchTo('settings', command.data);
 			break;
 		case 'quit':
@@ -69,19 +69,28 @@ update.settings = function(command) {
 	}
 }
 update.game = function(command) {
+	function updateDisplay() {
+		const data = {
+			cards: game.getData(),
+			buffer: controller.game.buffer
+		};
+		display.game.update(data);
+	}
+	controller.game.pileCounts = game.getPileData();
 	switch (command.type) {
-		case 'up': display.game.up(game.piles); break;
+		case 'up': display.game.up(); break;
+		case 'flip':
+			game.flipDeck();
+			updateDisplay();
+			break;
+		case 'move': updateDisplay();
 	}
 }
 
 let screen = 'menu';
 function switchTo(destination, data = []) {
-	// display[screen].clear();
-	// display[destination].start(...data);
 	display[destination].draw(...data);
 	display.buffer.dynamicSwitch(destination);
-	// display.buffer.dynamicClear(destination);
-	// display.buffer.renderScreen(destination);
 	screen = destination;
 }
 

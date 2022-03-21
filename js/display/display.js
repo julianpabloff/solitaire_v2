@@ -45,7 +45,7 @@ const Display = function() {
 		this.buffer.setColor(color[0], color[1]);
 	}
 	this.applyBackground = function() {
-		background.fill(this.theme['tab'][1]);
+		background.fill(this.theme['tab'][1]).render();
 		// background.fill(this.theme['tab'][1], '.', this.theme['tom'][1]);
 	}
 

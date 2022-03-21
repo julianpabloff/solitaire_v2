@@ -49,22 +49,12 @@ const MenuDisplay = function(d) {
 		drawMenu(index);
 		optionsBuffer.render();
 	}
-	this.clear = function() {
-		// const color = d.theme['tab'][1];
-		// logoBuffer.fill(color);
-		// optionsBuffer.fill(color);
-		logoBuffer.clear();
-		optionsBuffer.clear();
-	}
 	this.draw = function(index = 0) {
 		d.setColor('txt');
 		d.drawSquare(logoBuffer, 0, 0, logo.w, logo.h, true);
 		for (let i = 0; i < logoText.length; i++)
 			logoBuffer.draw(logoText[i], 1, 2 + i);
 		drawMenu(index);
-	}
-	this.dynamicClear = function() {
-		d.buffer.dynamicSwitch('settings');
 	}
 }
 
