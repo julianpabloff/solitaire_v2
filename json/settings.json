@@ -1,0 +1,11 @@
+{
+	"controls" : {
+		"flip": "space",
+		"waste" : "w",
+		"to": "t",
+		"submit" : "return",
+		"back": "escape",
+		"undo": "u",
+		"quit": "q"
+	}
+}

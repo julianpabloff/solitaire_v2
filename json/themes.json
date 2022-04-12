@@ -10,7 +10,8 @@
 		"cur" : ["black", "white"],
 		"tom" : ["white", "black"],
 		"txt" : ["white", "black"],
-		"txtcur" : ["black", "white"]
+		"txtcur" : ["black", "white"],
+		"accent" : "red"
 	},
 	{
 		"title" : "light",
@@ -23,7 +24,8 @@
 		"cur" : ["white", "black"],
 		"tom" : ["white", "red"],
 		"txt" : ["black", "white"],
-		"txtcur" : ["white", "black"]
+		"txtcur" : ["white", "black"],
+		"accent" : "red"
 	},
 	{
 		"title" : "dark",
@@ -36,7 +38,8 @@
 		"cur" : ["black", "white"],
 		"tom" : ["black", "red"],
 		"txt" : ["red", "black"],
-		"txtcur" : ["black", "red"]
+		"txtcur" : ["black", "red"],
+		"accent" : "red"
 	},
 	{
 		"title" : "ice",
@@ -49,7 +52,8 @@
 		"cur" : ["black", "white"],
 		"tom" : ["black", "cyan"],
 		"txt" : ["black", "cyan"],
-		"txtcur" : ["black", "white"]
+		"txtcur" : ["black", "white"],
+		"accent" : "cyan"
 	},
 	{
 		"title" : "candy",
@@ -59,9 +63,10 @@
 		"s" : ["white", "black"],
 		"bac" : ["black", "white"],
 		"tab" : ["white", "magenta"],
-		"cur" : ["black", "white"],
-		"tom" : ["white", "red"],
+		"cur" : ["black", "cyan"],
+		"tom" : ["white", "yellow"],
 		"txt" : ["black", "yellow"],
-		"txtcur" : ["white", "black"]
+		"txtcur" : ["white", "black"],
+		"accent" : "yellow"
 	}
 ]

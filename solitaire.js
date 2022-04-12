@@ -34,11 +34,11 @@ update.menu = function(command) {
 		case 'newGame': 
 			game.shuffle().dealCards();
 			controller.game.pileCounts = game.getPileData();
-			const data = [{
-				cards: game.getData(),
-				buffer: controller.game.buffer
-			}];
-			switchTo('game', data);
+			// const data = [{
+			// 	cards: game.getData(),
+			// 	buffer: controller.game.buffer
+			// }];
+			switchTo('game', [game.getData(), controller.game.buffer]);
 			break;
 		case 'move': display.menu.update(command.data); break;
 		case 'settings':
@@ -81,10 +81,11 @@ update.game = function(command) {
 		case 'up': display.game.up(); break;
 		case 'flip':
 			game.flipDeck();
-			updateDisplay();
 			break;
-		case 'move': updateDisplay();
+		case 'move': break;
+		default: return false;
 	}
+	display.game.update(game.getData(), command.data);
 }
 
 let screen = 'menu';
@@ -97,12 +98,15 @@ function switchTo(destination, data = []) {
 keypress(process.stdin);
 process.stdin.setRawMode(true);
 process.stdin.on('keypress', function(chunk, key) {
+	if (resizing) return;
 	const keyPressed = key == undefined ? chunk : key.name;
 	if (keyPressed == 'q') {
 		display.exit();
 		console.clear();
 		process.exit();
 	}
+	else if (keyPressed == 'f') process.stdout.write('\x1b[S');
+	else if (keyPressed == 'v') process.stdout.write('\x1b[T');
 	const keyValid = controller[screen].update(keyPressed);
 	if (keyValid) {
 		const action = controller[screen].handleScreen();
@@ -110,4 +114,16 @@ process.stdin.on('keypress', function(chunk, key) {
 			update[screen](action.command);
 		}
 	}
+});
+
+let resizeCountdown;
+let resizing = false;
+process.stdout.on('resize', () => {
+	display.init();
+	clearTimeout(resizeCountdown);
+	resizing = true;
+	resizeCountdown = setTimeout(() => {
+		display.resize(screen);
+		setTimeout(() => resizing = false, 100);
+	}, 1000);
 });

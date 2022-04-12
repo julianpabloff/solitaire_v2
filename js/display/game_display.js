@@ -98,7 +98,7 @@ const GameDisplay = function(d) {
 	const debugLeft = d.buffer.new(2, 1, 37, 25, 3, 'game');
 	const debugTop = d.buffer.new(42, 1, 51, 8, 3, 'game');
 	const debugRight = d.buffer.new(d.width - 39, 1, 37, 20, 3, 'game');
-	const drawDebug = function(data) {
+	const drawDebug = function(cardData, buffer) {
 		d.setColor('tab');
 		debugLeft.draw('STOCK', 0, 0).draw('PILES', 10, 0);
 		// debugTop.draw('FOUNDATIONS', 0, 0);
@@ -107,10 +107,10 @@ const GameDisplay = function(d) {
 			const cardString = card.value.toString() + card.suit;
 			debugLeft.draw(cardString + ' '.repeat(3 - cardString.length), x, y);
 		}
-		for (let i = 0; i < data.stock.length; i++) drawCardDebug(data.stock[i], 0, 1 + i);
-		for (let i = 0; i < data.waste.length; i++) drawCardDebug(data.waste[i], 4, 1 + i);
-		for (let i = 0; i < data.piles.length; i++) {
-			const cards = data.piles[i];
+		for (let i = 0; i < cardData.stock.length; i++) drawCardDebug(cardData.stock[i], 0, 1 + i);
+		for (let i = 0; i < cardData.waste.length; i++) drawCardDebug(cardData.waste[i], 4, 1 + i);
+		for (let i = 0; i < cardData.piles.length; i++) {
+			const cards = cardData.piles[i];
 			for (let c = 0; c < cards.length; c++) drawCardDebug(cards[c], 4 * i + 10, 1 + c);
 		}
 		// d.buffer.setBg('green');
@@ -118,28 +118,34 @@ const GameDisplay = function(d) {
 		// 	for (let j = 0; j < 13; j++) debugTop.draw('   ', 4 * j, 1 + i * 2);
 		// }
 
-		debugRight.draw('CONTROLLER', 0, 0, ...d.theme['tab']).draw('TO MODE:', 0, 2);
-		debugRight.draw('true', 9, 2, ...d.theme['tom']);
+		debugRight.draw('CONTROLLER', 0, 0, ...d.theme['tab']);
+		debugRight.draw('type', 0, 2).draw('index', 0, 3);
+		const h = d.theme['h'];
+		// const accentColor = [h[(h[0] == 'black' || h[0] == 'white') ? 1 : 0], d.theme['tab'][1]];
+		const accentColor = [d.theme['accent'], d.theme['tab'][1]];
+		d.buffer.setColor(...accentColor);
+		debugRight.draw('pile', 5, 2).draw(buffer.index.toString(), 6, 3);
 	}
 
-	this.draw = function(data) {
-		drawDebug(data.cards);
+	this.draw = function(cardData, buffer) {
+		drawDebug(cardData, buffer);
 		drawFoundations();
-		drawStock(data.cards.stock);
-		drawWaste(data.cards.waste);
-		drawPiles(data.cards.piles);
-		drawController(data.buffer);
+		drawStock(cardData.stock);
+		drawWaste(cardData.waste);
+		drawPiles(cardData.piles);
+		drawController(buffer);
 	}
-	this.update = function(data) {
-		this.draw(data);
+	this.update = function(cardData, buffer) {
+		this.draw(cardData, buffer);
 		stock.render();
 		foundations.render();
 		for (const pile of piles) pile.render();
 		navigation.render();
 		debugLeft.render();
 		debugTop.render();
+		debugRight.render();
 		// debugLeft.outline('red');
-		debugRight.outline('red');
+		// debugRight.outline('red');
 	}
 	this.up = function() {
 	}

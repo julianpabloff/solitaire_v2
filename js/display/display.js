@@ -22,6 +22,13 @@ const Display = function() {
 	let rows, columns;
 	this.setSize();
 
+	this.resize = function(screen) {
+		// this.setSize();
+		// this.menu.setSize();
+		// this.settings.setSize();
+		// this.game.setSize();
+	}
+
 	this.centerWidth = width => { return Math.floor(columns/2 - width/2); }
 	this.centerHeight = height => { return Math.floor(rows/2 - height/2); }
 	this.centerString = (string, width = columns) => { return Math.floor(width / 2 - string.length / 2); }
