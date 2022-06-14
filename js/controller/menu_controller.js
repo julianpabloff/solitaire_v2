@@ -12,7 +12,7 @@ const MenuController = function(c) {
 	this.up = this.down = this.enter = this.esc = false;
 
 	let menuOption = 0; const optionCount = 4;
-	this.reset = () => menuOption = 0;
+	this.reset = () => {menuOption = 0; return menuOption;}
 	this.handleScreen = function() {
 		if (this.up) {
 			menuOption = c.cycle(menuOption, optionCount, false);

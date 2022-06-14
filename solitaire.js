@@ -5,7 +5,7 @@ const controller = new (require('./js/controller/controller.js'));
 
 //Temporary
 let jsonSettings = {
-	theme: 'ice',
+	theme: 'normal',
 	label: false,
 	draw: 1
 };
@@ -62,10 +62,9 @@ update.settings = function(command) {
 			const newSettings = controller.settings.exportChanges(allSettings);
 			const themeChanged = newSettings.theme != display.theme.title;
 			applySettings(newSettings);
-			controller.menu.reset();
 			controller.settings.reset();
+			switchTo('menu', [controller.menu.reset()]);
 			if (themeChanged) display.applyBackground();
-			switchTo('menu', [0]);
 	}
 }
 update.game = function(command) {
@@ -91,7 +90,7 @@ update.game = function(command) {
 let screen = 'menu';
 function switchTo(destination, data = []) {
 	display[destination].draw(...data);
-	display.buffer.dynamicSwitch(destination);
+	display.buffer.preRender(destination);
 	screen = destination;
 }
 
@@ -119,11 +118,11 @@ process.stdin.on('keypress', function(chunk, key) {
 let resizeCountdown;
 let resizing = false;
 process.stdout.on('resize', () => {
-	display.init();
-	clearTimeout(resizeCountdown);
-	resizing = true;
-	resizeCountdown = setTimeout(() => {
-		display.resize(screen);
-		setTimeout(() => resizing = false, 100);
-	}, 1000);
+	// display.init();
+	// clearTimeout(resizeCountdown);
+	// resizing = true;
+	// resizeCountdown = setTimeout(() => {
+	// 	display.resize(screen);
+	// 	setTimeout(() => resizing = false, 100);
+	// }, 1000);
 });

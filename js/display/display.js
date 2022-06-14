@@ -52,7 +52,10 @@ const Display = function() {
 		this.buffer.setColor(color[0], color[1]);
 	}
 	this.applyBackground = function() {
-		background.fill(this.theme['tab'][1]).render();
+		const bg = this.theme['tab'][1];
+		const fg = this.theme['tom'][1];
+		background.fill(bg);
+		background.render();
 		// background.fill(this.theme['tab'][1], '.', this.theme['tom'][1]);
 	}
 
