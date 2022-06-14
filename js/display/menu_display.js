@@ -47,8 +47,7 @@ const MenuDisplay = function(d) {
 	}
 	this.update = function(index = 0) {
 		drawMenu(index);
-		d.buffer.renderScreen('menu');
-		// optionsBuffer.render();
+		optionsBuffer.render();
 	}
 	this.draw = function(index = 0) {
 		d.setColor('txt');

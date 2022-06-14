@@ -162,37 +162,6 @@ const BufferManager = function() {
 		} while (i < area);
 	}
 
-	this.dynamicSwitch = function(screen, prevScreen = this.screen) {
-		this.dynamicClear(screen, prevScreen);
-		// this.renderScreen(screen);
-		setTimeout(() => this.renderScreen(screen), 1000);
-	}
-	this.dynamicClear = function(screen, prevScreen = this.screen) {
-		const width = process.stdout.columns;
-		const height = process.stdout.rows;
-		const size = width * height;
-		const buffersToRender = [];
-		for (let i = 0; i < size; i++) {
-			const x = i % width; const y = Math.floor(i / width);
-			const current = this.somethingHere(prevScreen, x, y);
-			const next = this.somethingHere(screen, x, y, false);
-			if (current && next) {
-				const buffer = current.buffer;
-				const index = buffer.screenToIndex(x, y);
-				buffer.current[index] = buffer.previous[index];
-				buffer.colors[index] = buffer.prevColors[index];
-				let addedToRenderQueue = false;
-				for (const b of buffersToRender)
-					if (b.id == buffer.id) {
-						addedToRenderQueue = true;
-						break;
-					}
-				if (!addedToRenderQueue) buffersToRender.push(buffer);
-			}
-		}
-		for (const buffer of buffersToRender) buffer.render().reset();
-		this.screen = screen;
-	}
 	this.renderScreen = function(screen) {
 		const zArray = this.screens[screen];
 		const windowWidth = process.stdout.columns;
@@ -264,10 +233,10 @@ const BufferManager = function() {
 					newColors[i] = color;
 					buffer.previous[index] = code;
 					buffer.prevColors[index] = color;
-					// process.stdout.write(this.moveCursorString(x, y) + '.');
 					this.addToOutput(output, code, color, x, y);
+					// process.stdout.write(this.moveCursorString(x, y) + '.');
 					break;
-				}
+				}// else process.stdout.write(this.moveCursorString(x, y) + '&');
 			}
 			if (codeOnScreen) {
 				if (!bufferHere) {

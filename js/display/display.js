@@ -58,6 +58,7 @@ const Display = function() {
 		background.render();
 		// background.fill(this.theme['tab'][1], '.', this.theme['tom'][1]);
 	}
+	this.fillBackground = color => { background.fill(color) };
 
 	const squareElements = {
 		none: {tl: ' ', tr: ' ', bl: ' ', br: ' ', h: ' ', v: ' '},

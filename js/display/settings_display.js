@@ -52,7 +52,7 @@ const SettingsDisplay = function(d) {
 				if (i == buffer[1]) d.setColor('txtcur');
 				else d.setColor('txt');
 				const text = secondOptions[i];
-				const output = ' ' + text + ' '.repeat(secondWidth - 4 - text.length);
+				const output = ' ' + text + ' '.repeat(secondWidth - 3 - text.length);
 				settings.draw(output, 27, 7 + i);
 			}
 		}
