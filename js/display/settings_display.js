@@ -90,6 +90,10 @@ const SettingsDisplay = function(d) {
 	this.draw = function(buffer, code) {
 		drawSettings(buffer, code);
 	}
+	this.resize = function() {
+		this.setSize();
+		settings.simpleMove(x, y);
+	}
 }
 
 module.exports = SettingsDisplay;

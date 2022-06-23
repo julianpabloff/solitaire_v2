@@ -5,7 +5,7 @@ const controller = new (require('./js/controller/controller.js'));
 
 //Temporary
 let jsonSettings = {
-	theme: 'dark',
+	theme: 'candy',
 	label: false,
 	draw: 1
 };
@@ -86,6 +86,10 @@ update.game = function(command) {
 	}
 	display.game.update(game.getData(), command.data);
 }
+const getData = {};
+getData.menu = () => [controller.menu.getData()];
+getData.settings = () => controller.settings.getData();
+getData.game = () => [game.getData(), controller.game.getData()];
 
 let screen = 'menu';
 function switchTo(destination, data = []) {
@@ -106,6 +110,7 @@ process.stdin.on('keypress', function(chunk, key) {
 	}
 	else if (keyPressed == 'f') process.stdout.write('\x1b[S');
 	else if (keyPressed == 'v') process.stdout.write('\x1b[T');
+	else if (keyPressed == 'i') display.redrawTest();
 	const keyValid = controller[screen].update(keyPressed);
 	if (keyValid) {
 		const action = controller[screen].handleScreen();
@@ -118,11 +123,11 @@ process.stdin.on('keypress', function(chunk, key) {
 let resizeCountdown;
 let resizing = false;
 process.stdout.on('resize', () => {
-	// display.init();
-	// clearTimeout(resizeCountdown);
-	// resizing = true;
-	// resizeCountdown = setTimeout(() => {
-	// 	display.resize(screen);
-	// 	setTimeout(() => resizing = false, 100);
-	// }, 1000);
+	display.clear(true);
+	clearTimeout(resizeCountdown);
+	resizing = true;
+	resizeCountdown = setTimeout(() => {
+		display.resize(screen, getData[screen]());
+		setTimeout(() => resizing = false, 50);
+	}, 500);
 });

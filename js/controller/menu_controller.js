@@ -32,6 +32,7 @@ const MenuController = function(c) {
 			}
 		}
 	}
+	this.getData = () => menuOption;
 }
 
 module.exports = MenuController;

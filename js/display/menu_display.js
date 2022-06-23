@@ -56,6 +56,18 @@ const MenuDisplay = function(d) {
 			logoBuffer.draw(logoText[i], 1, 2 + i);
 		drawMenu(index);
 	}
+	this.redrawTest = function() {
+		logoBuffer.simpleMove(1, 1);
+		// logoBuffer.current = new Uint16Array(logoBuffer.previous);
+		// logoBuffer.render();
+	}
+	this.resize = function() {
+		this.setSize();
+		logoBuffer.simpleMove(logo.x, logo.y);
+		optionsBuffer.simpleMove(options.x, options.y);
+		// d.buffer.renderScreen('menu');
+		// logoBuffer.render();
+	}
 }
 
 module.exports = MenuDisplay;

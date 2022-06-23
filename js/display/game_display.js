@@ -135,6 +135,8 @@ const GameDisplay = function(d) {
 		drawPiles(cardData.piles);
 		drawController(buffer);
 	}
+	// Change to just render the buffers you need to - it feels slow
+	// Perhaps build it into the buffer using a changed boolean on the draw function
 	this.update = function(cardData, buffer) {
 		this.draw(cardData, buffer);
 		stock.render();
@@ -148,6 +150,14 @@ const GameDisplay = function(d) {
 		// debugRight.outline('red');
 	}
 	this.up = function() {
+	}
+	this.resize = function() {
+		this.setSize();
+		stock.simpleMove(cardX, topY);
+		foundations.simpleMove(foundationsX[0], topY);
+		for (let i = 0; i < 7; i++) piles[i].simpleMove(cardX + (cardWidth + margin) * i, cardY);
+		navigation.simpleMove(cardX, topY - 2);
+		debugRight.simpleMove(d.width - 39, 1);
 	}
 }
 

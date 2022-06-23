@@ -57,6 +57,7 @@ const GameController = function(c) {
 			this.cycle(newIndex, up, true);
 		else return newIndex;
 	}
+	this.getData = () => this.buffer;
 }
 
 module.exports = GameController;

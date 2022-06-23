@@ -9,6 +9,10 @@ const Display = function() {
 		process.stdout.write('\x1b[?25l');
 		this.applyBackground();
 	}
+	this.clear = () => {
+		process.stdout.write('\x1b[0m\x1b[2J');
+		this.buffer.lastRenderedColor = 0;
+	}
 	this.exit = function(screen = 'menu') {
 		process.stdout.write('\x1b[?25h\x1b[0m');
 		process.stdout.cursorTo(0,0);
@@ -21,13 +25,6 @@ const Display = function() {
 	}
 	let rows, columns;
 	this.setSize();
-
-	this.resize = function(screen) {
-		// this.setSize();
-		// this.menu.setSize();
-		// this.settings.setSize();
-		// this.game.setSize();
-	}
 
 	this.centerWidth = width => { return Math.floor(columns/2 - width/2); }
 	this.centerHeight = height => { return Math.floor(rows/2 - height/2); }
@@ -55,8 +52,8 @@ const Display = function() {
 		const bg = this.theme['tab'][1];
 		const fg = this.theme['tom'][1];
 		background.fill(bg);
-		background.render();
 		// background.fill(this.theme['tab'][1], '.', this.theme['tom'][1]);
+		background.render();
 	}
 	this.fillBackground = color => { background.fill(color) };
 
@@ -78,10 +75,33 @@ const Display = function() {
 		return buffer;
 	}
 
-	const debug = this.buffer.new(0, this.height - 1, columns, 2, 1);
+	const debug = this.buffer.new(0, this.height - 1, columns, 2, 3, 'all');//.fill('red');
 	this.debug = function(item) {
-		debug.draw(item, 0, 0, 'yellow').render();
+		this.setColor('tab');
+		debug.draw(item, 0, 0).render();
 	}
+	this.redrawTest = function() {
+		this.clear();
+		setTimeout(() => {
+			this.menu.redrawTest();
+			this.buffer.generateSavedScreen('menu');
+		}, 1000);
+	}
+	this.resize = function(screen, data) {
+		// this.buffer.setSize();
+		this.setSize();
+		background.setSize(0, 0, columns, rows);
+		const bg = this.theme['tab'][1];
+		background.fill(bg);
+		// background.fill(this.theme['tab'][1], '.', this.theme['tom'][1]);
+		this.menu.resize();
+		this.settings.resize();
+		this.game.resize();
+		this[screen].draw(...data);
+		// this.buffer.logScreen(screen);
+		this.buffer.generateSavedScreen(screen);
+	}
+
 }
 
 module.exports = Display;

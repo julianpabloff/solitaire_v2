@@ -48,6 +48,7 @@ const SettingsController = function(c) {
 		}
 		return output;
 	}
+	this.getData = () => [this.buffer, this.code];
 }
 
 module.exports = SettingsController;
