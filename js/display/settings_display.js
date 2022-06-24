@@ -67,6 +67,7 @@ const SettingsDisplay = function(d) {
 			let position = 0;
 			for (const item of preview.color[colorIndex]) {
 				const color = theme[item[0]];
+				if (color[1] == 'none') color[1] = 'black';
 				d.buffer.setColor(color[0], color[1]);
 				const count = item[1];
 				for (let j = 0; j < count; j++) {

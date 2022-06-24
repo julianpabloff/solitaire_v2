@@ -36,7 +36,7 @@ const Display = function() {
 	this.settings = new SettingsDisplay(this);
 	const background = this.buffer.new(0, 0, columns, rows, 0, 'all');
 
-	this.themes = require('../../json/themes.json');
+	// this.themes = require('../../json/themes.json');
 	this.getTheme = function(name) {
 		for (const theme of this.themes)
 			if (theme.title == name) return theme;

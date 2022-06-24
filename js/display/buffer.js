@@ -145,78 +145,6 @@ const BufferManager = function() {
 		if (output.code || output.fg || output.bg) return output;
 		return false;
 	}
-	// All coordinates are buffer relative
-	// first four coordinates are for target selection, final x and y are the destination cooridinates
-	this.clone = function(target, destination, leftX, topY, rightX, bottomY, x, y) {
-		const width = rightX - leftX + 1;
-		const height = bottomY - topY + 1;
-		if (width < 1 || height < 1) return;
-		const area = width * height;
-		let readIndex = target.coordinateIndex(leftX, topY);
-		let writeIndex = destination.coordinateIndex(x, y);
-		let i = 0;
-		do {
-			destination.current[writeIndex] = target.current[readIndex];
-			i++;
-			if (i % width == 0) {
-				readIndex = target.coordinateIndex(leftX, topY + (i / width));
-				writeIndex = destination.coordinateIndex(x, y + (i / width));
-			} else {
-				readIndex++;
-				writeIndex++;
-			}
-		} while (i < area);
-	}
-
-	this.renderScreen = function(screen) {
-		const zArray = this.screens[screen];
-		const windowWidth = process.stdout.columns;
-		const windowHeight = process.stdout.rows;
-		const firstBuffer = zArray[0];
-		let minX = firstBuffer.x; let minY = firstBuffer.y;
-		let maxX = firstBuffer.x + firstBuffer.width - 1;
-		let maxY = firstBuffer.y + firstBuffer.height - 1;
-		for (let i = 1; i < zArray.length; i++) {
-			const buffer = zArray[i];
-			const x = buffer.x; const y = buffer.y;
-			const mx = x + buffer.width - 1; const my = y + buffer.height - 1;
-			if (x < minX) minX = x; if (mx > maxX) maxX = mx;
-			if (y < minY) minY = y;	if (my > maxY) maxy = my;
-		}
-		const width = maxX - minX + 1;
-		const height = maxY - minY + 1;
-		const size = width * height;
-		const output = [];
-		const buffersToReset = [];
-		for (let i = 0; i < size; i++) {
-			const x = minX + (i % width);
-			const y = minY + Math.floor(i / width);
-			const point = this.somethingHere(screen, x, y, false);
-			if (point) {
-				const buffer = point.buffer;
-				const index = buffer.screenToIndex(x, y);
-				const fgCode = point.color >> 4;
-				const bgCode = point.color & 0x0F;
-				if (point.color != this.lastRenderedColor) {
-					if (fgCode == 0 || bgCode == 0) output.push(this.resetColorString);
-					if (fgCode > 0) output.push(this.fgToString(fgCode));
-					if (bgCode > 0) output.push(this.bgToString(bgCode));
-				}
-				const last = this.lastRenderedLocation;
-				if (!(last.y == y && last.x == x - 1))
-					output.push(this.moveCursorString(x, y)); 
-				output.push(String.fromCharCode(point.char));
-				this.lastRenderedColor = point.color;
-				this.lastRenderedLocation = {x: x, y: y};
-				buffer.previous[index] = point.char;
-				buffer.prevColors[index] = point.color;
-				buffersToReset.push(buffer);
-			}
-		}
-		for (const buffer of buffersToReset) buffer.clearDraw();
-		process.stdout.cursorTo(minX, minY);
-		process.stdout.write(output.join(''));
-	}
 	this.generateSavedScreen = function(screen = this.screen) {
 		const start = Date.now();
 		const zArray = this.gatherBuffersOnScreen(screen);
@@ -225,36 +153,40 @@ const BufferManager = function() {
 		for (let i = 0; i < screenSize; i++) {
 			const x = i % screenWidth; const y = Math.floor(i / screenWidth);
 			let allBufferFound = false;
-			let topFound = false;
+			const point = { code: 0, fg: 0, bg: 0 };
 			for (let j = zArray.length - 1; j >= 0; j--) {
 				const buffer = zArray[j];
 				const index = buffer.screenToIndex(x, y);
 				if (index == null) continue;
-				let code = buffer.current[index];
-				let color = buffer.colors[index];
+				const code = buffer.current[index];
+				const color = buffer.colors[index];
 				if (!code && !color) continue;
-				if (!topFound) {
+				if (code && !point.code) {
+					point.code = code;
 					this.codes[i] = code;
-					this.colors[i] = color;
-					this.addToOutput(output, code, color, x, y);
-					buffer.previous[index] = code;
-					buffer.prevColors[index] = color;
-					topFound = true;
 				}
-				// Wait to break until something underneath from the all screen is found
-				if (allBufferFound) break;
-				if (buffer.screen == 'all') {
-					allBufferFound = true;
+				if (color && !this.colors[i]) this.colors[i] = color;
+				const fg = color >> 4; const bg = color & 0x0F;
+				if (fg && !point.fg) point.fg = fg;
+				if (bg && !point.bg) point.bg = bg;
+				if (buffer.screen == 'all' && !allBufferFound) {
 					this.allScreenCodes[i] = code;
 					this.allScreenColors[i] = color;
 					buffer.previous[index] = code;
 					buffer.prevColors[index] = color;
+					allBufferFound = true;
+				}
+				if (point.code && point.fg && point.bg && allBufferFound) {
+					const outputColor = (point.fg << 4) + point.bg;
+					this.addToOutput(output, point.code, outputColor, x, y);
+					break;
 				}
 			}
 		}
 		for (const buffer of zArray) buffer.clearDraw();
 		process.stdout.write(output.join(''));
 	}
+	// Still need to update this in the same way
 	this.preRender = function(screen) {
 		const zArray = this.gatherBuffersOnScreen(screen);
 		const output = [];

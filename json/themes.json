@@ -42,6 +42,20 @@
 		"accent" : "red"
 	},
 	{
+		"title" : "pipboy",
+		"h" : ["green", "none"],
+		"c" : ["green", "none"],
+		"d" : ["green", "none"],
+		"s" : ["green", "none"],
+		"bac" : ["green", "black"],
+		"tab" : ["green", "black"],
+		"cur" : ["black", "green"],
+		"tom" : ["black", "green"],
+		"txt" : ["green", "black"],
+		"txtcur" : ["black", "green"],
+		"accent" : "green"
+	},
+	{
 		"title" : "ice",
 		"h" : ["black", "cyan"],
 		"c" : ["white", "blue"],

@@ -2,6 +2,7 @@ const keypress = require('keypress');
 const game = new (require('./js/game.js'));
 const display = new (require('./js/display/display.js'));
 const controller = new (require('./js/controller/controller.js'));
+const themes = require('./json/themes.json');
 
 //Temporary
 let jsonSettings = {
@@ -10,10 +11,12 @@ let jsonSettings = {
 	draw: 1
 };
 const allSettings = {
-	theme: ['normal', 'light', 'dark', 'ice', 'candy'],
+	// theme: ['normal', 'light', 'dark', 'ice', 'candy'],
+	theme: [],
 	label: [true, false],
 	draw: [1, 3]
 };
+for (const theme of themes) allSettings.theme.push(theme.title);
 function applySettings(settings) {
 	display.setTheme(settings.theme);
 	game.drawAmount = settings.draw;
@@ -22,6 +25,7 @@ for (const k of Object.keys(allSettings))
 	controller.settings.counts.push(allSettings[k].length);
 for (const k of Object.keys(jsonSettings))
 	controller.settings.code.push(allSettings[k].indexOf(jsonSettings[k]));
+display.themes = themes;
 display.settings.importThemes(allSettings.theme);
 
 applySettings(jsonSettings);
