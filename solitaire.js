@@ -5,7 +5,7 @@ const controller = new (require('./js/controller/controller.js'));
 
 //Temporary
 let jsonSettings = {
-	theme: 'candy',
+	theme: 'dark',
 	label: false,
 	draw: 1
 };

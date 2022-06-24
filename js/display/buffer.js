@@ -65,7 +65,7 @@ const BufferManager = function() {
 	this.color = 0;
 	this.lastRenderedColor = 0;
 	this.lastRenderedLocation = {x: 0, y: 0};
-	this.colorMap = { reset: 0, black: 1, red: 2, green: 3, yellow: 4, blue: 5, magenta: 6, cyan: 7, white: 8 };
+	this.colorMap = { none: 0, black: 1, red: 2, green: 3, yellow: 4, blue: 5, magenta: 6, cyan: 7, white: 8 };
 	this.setFg = function(color) {
 		const fgCode = this.colorMap[color];
 		this.color = (fgCode << 4) + (this.color & 0x0F);
@@ -106,31 +106,43 @@ const BufferManager = function() {
 		const zArray = this.gatherBuffersOnScreen();
 		if (zArray.length < 2) return false;
 		let found = false;
+		let output = { code: 0, fg: 0, bg: 0 };
 		for (const buffer of zArray) {
 			const index = buffer.screenToIndex(x, y);
 			if (found && index != null) {
-				if (!buffer.transparent) return true;
-				if (buffer.previous[index] != 0) return true;
+				const code = buffer.previous[index];
+				const color = buffer.prevColors[index];
+				const fg = color >> 4; const bg = color & 0x0F;
+				if (code) output.code = code;
+				if (fg) output.fg = fg;
+				if (bg) output.bg = bg;
+				// if (!buffer.transparent) return true;
 			}
 			if (buffer.id == target.id) found = true;
 		}
+		if (output.code || output.fg || output.bg) return output;
 		return false;
 	}
 	this.somethingBelow = function(target, x, y) {
 		const zArray = this.gatherBuffersOnScreen();
 		if (zArray.length < 2) return false;
 		let found = false;
+		let output = { code: 0, fg: 0, bg: 0 };
 		for (let i = zArray.length - 1; i >= 0; i--) {
 			const buffer = zArray[i];
 			const index = buffer.screenToIndex(x, y);
 			if (found && index != null) {
 				const code = buffer.previous[index];
 				const color = buffer.prevColors[index];
-				if (code != 0 || color != 0) return { char: code, color: color };
+				const fg = color >> 4; const bg = color & 0x0F;
+				if (code && !output.code) output.code = code;
+				if (fg && !output.fg) output.fg = fg;
+				if (bg && !output.bg) output.bg = bg;
 				// else if (!buffer.transparent) return false;
 			}
 			if (buffer.id == target.id) found = true; 
 		}
+		if (output.code || output.fg || output.bg) return output;
 		return false;
 	}
 	// All coordinates are buffer relative
@@ -436,28 +448,38 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 			if (code == 0) {// && clearLastFrame) {
 				const below = manager.somethingBelow(this, x, y);
 				if (below) {
-					drawingCode = below.char;
-					drawingColorCode = below.color;
+					drawingCode = below.code;
+					drawingColorCode = (below.fg << 4) + below.bg;
 				} else {
 					if (!this.transparent) code = 32;
 					drawingCode = 32;
 					drawingColorCode = 0;
 				}
+			} else if ((colorCode & 0x0F) == 0) { // Character present but no background color
+				const below = manager.somethingBelow(this, x, y);
+				if (below) drawingColorCode = (drawingColorCode & 0xF0) + below.bg;
 			}
 			const bufferOnActiveScreen = !(manager.enforceScreens && manager.screen != this.screen);
 			const differentThanPrev = code != prevCode || colorCode != prevColorCode;
-			// New logic here that will determine if the stuff above will still be drawn (code 32)
-			// If it's a code 32 we have to change what is above, the background color to match the 32's background color
-			// And that of course is only if that above character doesn't have a background of its own
-			if (bufferOnActiveScreen && differentThanPrev && !manager.somethingAbove(this, x, y)) {
-				manager.addToOutput(output, drawingCode, drawingColorCode, x, y);
-				manager.save(drawingCode, drawingColorCode, x, y);
+			const above = manager.somethingAbove(this, x, y);
+			if (bufferOnActiveScreen && differentThanPrev) {
+				let draw = !above.code;
+				if (above.code && !above.bg) {
+					drawingCode = above.code;
+					// Uses the code and color of the above point, but preserves the background of this buffer's point
+					drawingColorCode = (above.fg << 4) + (drawingColorCode & 0x0F);
+					draw = true;
+				}
+				if (draw) {
+					manager.addToOutput(output, drawingCode, drawingColorCode, x, y);
+					manager.save(drawingCode, drawingColorCode, x, y);
+				}
 			}
 			if (this.screen == 'all' && differentThanPrev)
 				manager.saveAllScreen(drawingCode, drawingColorCode, x, y);
 			this.moveToPrevious(i, code, colorCode);
 		}
-		process.stdout.write(output.join(''));
+		if (true) process.stdout.write(output.join(''));
 		return this;
 	}
 	// For adding to the canvas without it clearing
@@ -490,7 +512,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		savedColors = new Uint8Array(this.colors);
 		return this;
 	}
-	const colorLookup = ['reset', 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'];
+	const colorLookup = ['none', 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'];
 	this.read = function(x, y) {
 		const index = this.coordinateIndex(x, y);
 		const colorCode = savedColors[index];
@@ -549,7 +571,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		const tempBuffer = new Uint16Array(this.previous);
 		const tempColorBuffer = new Uint8Array(this.prevColors);
 		if (!this.hidden) this.clear();
-		if (wasOutlined) this.outline('reset', false);
+		if (wasOutlined) this.outline('none', false);
 		this.current = tempBuffer;
 		this.colors = tempColorBuffer;
 		this.x = x; this.y = y;
@@ -598,7 +620,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 	}
 
 	// For seeing where it is
-	let outlineColor = 'reset';
+	let outlineColor = 'none';
 	this.outline = function(color = outlineColor, draw = true) {
 		if (this.screen == manager.screen) {
 			const fgCode = manager.colorMap[color];
@@ -613,13 +635,13 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 				drawToScreen(sq.v, this.x + this.width, this.y + i);
 			}
 			drawToScreen(sq.bl + sq.h.repeat(this.width) + sq.br, this.x - 1, this.y + this.height);
-			manager.lastRenderedColor = manager.setColor(color, 'reset');
+			manager.lastRenderedColor = manager.setColor(color, 'none');
 		}
 		this.outlined = draw;
 		if (draw) outlineColor = color;
 	}
 	this.outline.clear = () => {
-		if (this.outlined) this.outline('reset', false);
+		if (this.outlined) this.outline('none', false);
 	}
 	this.outline.hide = () => {
 		this.outline.clear();
