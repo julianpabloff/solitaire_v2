@@ -25,8 +25,8 @@ const MenuDisplay = function(d) {
 	let logo, options;
 	this.setSize();
 
-	const logoBuffer = d.buffer.new(logo.x, logo.y, logo.w, logo.h, 1, 'menu');
-	const optionsBuffer = d.buffer.new(options.x, options.y, options.w, options.h, 1, 'menu');
+	const logoBuffer = d.buffer.new(logo.x, logo.y, logo.w, logo.h, 2, 'menu');
+	const optionsBuffer = d.buffer.new(options.x, options.y, options.w, options.h, 2, 'menu');
 
 	const drawMenu = function(index) {
 		d.setColor('txt');
@@ -38,6 +38,7 @@ const MenuDisplay = function(d) {
 			const output = ' '.repeat(spacing) + optionText[i] + ' '.repeat(spacing);
 			optionsBuffer.draw(output, 1, 2 * i + 1);
 		}
+		d.debug('hellososoijsdoijsdofjasdofasdfoiajsdfoiasdfoijsadfoiasdfoiasjdfoisjdfoisajdfoiasdfoasjdfosaidfjoaoinecoienoaineof');
 	}
 	this.start = function(index = 0) {
 		d.buffer.screen = 'menu';
@@ -65,6 +66,7 @@ const MenuDisplay = function(d) {
 		this.setSize();
 		logoBuffer.simpleMove(logo.x, logo.y);
 		optionsBuffer.simpleMove(options.x, options.y);
+		// logoBuffer.outline('red');
 		// d.buffer.renderScreen('menu');
 		// logoBuffer.render();
 	}

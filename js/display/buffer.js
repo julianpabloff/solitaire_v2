@@ -30,6 +30,7 @@ const BufferManager = function() {
 		this.colors = new Uint8Array(screenSize);
 		this.allScreenCodes = new Uint16Array(screenSize);
 		this.allScreenColors = new Uint8Array(screenSize);
+		this.allScreenZIndeces = new Uint8Array(screenSize);
 	}
 	let screenWidth, screenSize;
 	this.setSize();
@@ -38,10 +39,11 @@ const BufferManager = function() {
 		this.codes[index] = code;
 		this.colors[index] = color;
 	}
-	this.saveAllScreen = function(code, color, x, y) {
+	this.saveAllScreen = function(code, color, x, y, zIndex) {
 		const index = y * screenWidth + x;
 		this.allScreenCodes[index] = code;
 		this.allScreenColors[index] = color;
+		this.allScreenZIndeces[index] = zIndex;
 	}
 	this.switch = function(screen) {
 		for (const buffer of this.screens[this.screen]) {
@@ -152,14 +154,18 @@ const BufferManager = function() {
 		this.setSize();
 		for (let i = 0; i < screenSize; i++) {
 			const x = i % screenWidth; const y = Math.floor(i / screenWidth);
+			let bufferFound = false;
 			let allBufferFound = false;
 			const point = { code: 0, fg: 0, bg: 0 };
+			const allPoint = { code: 0, fg: 0, bg: 0, zIndex: 0 };
 			for (let j = zArray.length - 1; j >= 0; j--) {
 				const buffer = zArray[j];
 				const index = buffer.screenToIndex(x, y);
 				if (index == null) continue;
 				const code = buffer.current[index];
 				const color = buffer.colors[index];
+				buffer.previous[index] = code;
+				buffer.prevColors[index] = color;
 				if (!code && !color) continue;
 				if (code && !point.code) {
 					point.code = code;
@@ -170,67 +176,141 @@ const BufferManager = function() {
 				if (fg && !point.fg) point.fg = fg;
 				if (bg && !point.bg) point.bg = bg;
 				if (buffer.screen == 'all' && !allBufferFound) {
-					this.allScreenCodes[i] = code;
-					this.allScreenColors[i] = color;
-					buffer.previous[index] = code;
-					buffer.prevColors[index] = color;
-					allBufferFound = true;
+					if (code && !allPoint.code) {
+						allPoint.code = code;
+						allPoint.zIndex = buffer.zIndex;
+					}
+					if (fg && !allPoint.fg) allPoint.fg = fg;
+					if (bg && !allPoint.bg) allPoint.bg = bg;
+					allBufferFound = allPoint.code && allPoint.fg && allPoint.bg;
 				}
-				if (point.code && point.fg && point.bg && allBufferFound) {
-					const outputColor = (point.fg << 4) + point.bg;
-					this.addToOutput(output, point.code, outputColor, x, y);
+				bufferFound = point.code && point.fg && point.bg;
+				if (bufferFound && allBufferFound) {
 					break;
 				}
 			}
+			const outputColor = (point.fg << 4) + point.bg;
+			this.addToOutput(output, point.code, outputColor, x, y);
+			this.allScreenCodes[i] = allPoint.code;
+			this.allScreenColors[i] = (allPoint.fg << 4) + allPoint.bg
+			this.allScreenZIndeces[i] = allPoint.zIndex;
 		}
 		for (const buffer of zArray) buffer.clearDraw();
+		process.stdout.write(output.join(''));
+	}
+	this.preRenderNew = function(screen) {
+		const zArray = this.gatherBuffersOnScreen(screen);
+		const newCodes = new Uint16Array(screenSize);
+		const newColors = new Uint8Array(screenSize);
+		const output = [];
+		for (let i = 0; i < screenSize; i++) {
+			const x = i % screenWidth; const y = Math.floor(i / screenWidth);
+			const point = { code: 0, fg: 0, bg: 0};
+			const codeOnScreen = this.codes[i];
+			const colorOnScreen = this.colors[i];
+			let somethingHere = false;
+			for (let j = zArray.length - 1; j >= 0; j--) {
+				const buffer = zArray[j];
+				const index = buffer.screenToIndex(x, y);
+				if (index == null) continue;
+				let code, color;
+				if (buffer.screen == 'all') {
+					code = buffer.previous[index];
+					color = buffer.prevColors[index];
+				} else {
+					code = buffer.current[index];
+					color = buffer.colors[index];
+				}
+				buffer.previous[index] = code;
+				buffer.prevColors[index] = color;
+				if (!code && !color) continue;
+				somethingHere = true;
+				if (code && !point.code) point.code = code;
+				const fg = color >> 4; const bg = color & 0x0F;
+				if (fg && !point.fg) point.fg = fg;
+				if (bg && !point.bg) point.bg = bg;
+				if (point.code && point.fg && point.bg) break;
+			}
+			if (point.code || point.fg || point.bg) {
+				const outputColor = (point.fg << 4) + point.bg;
+				newCodes[i] = point.code;
+				newColors[i] = outputColor;
+				this.addToOutput(output, point.code, outputColor, x, y);
+			} else if (codeOnScreen) {
+				this.addToOutput(output, 32, 0, x, y);
+			}
+		}
+		for (const buffer of zArray) buffer.clearDraw();
+		this.codes = new Uint16Array(newCodes);
+		this.colors = new Uint8Array(newColors);
+		this.screen = screen;
 		process.stdout.write(output.join(''));
 	}
 	// Still need to update this in the same way
 	this.preRender = function(screen) {
 		const zArray = this.gatherBuffersOnScreen(screen);
 		const output = [];
-		const newCodes = new Uint16Array(this.codes);
-		const newColors = new Uint8Array(this.colors);
+		const newCodes = new Uint16Array(screenSize);
+		const newColors = new Uint8Array(screenSize);
 		for (let i = 0; i < screenSize; i++) {
 			const x = i % screenWidth; const y = Math.floor(i / screenWidth);
 			const codeOnScreen = this.codes[i];
 			const colorOnScreen = this.colors[i];
+			const allScreenCode = this.allScreenCodes[i];
+			const allScreenColor = this.allScreenColors[i];
+			const allScreenZIndex = this.allScreenZIndeces[i];
 			let bufferHere = false;
+			const point = { code: 0, fg: 0, bg: 0 };
 			for (let j = zArray.length - 1; j >= 0; j--) {
 				const buffer = zArray[j];
 				const index = buffer.screenToIndex(x, y);
-				if (index == null || buffer.screen == 'all') continue;
-				const code = buffer.current[index];
-				const color = buffer.colors[index];
+				if (index == null) continue;
+				// if (buffer.zIndex < allScreenZIndex)
+				let code, color;
+				if (buffer.screen == 'all') {
+					code = buffer.previous[index];
+					color = buffer.prevColors[index];
+				} else {
+					code = buffer.current[index];
+					color = buffer.colors[index];
+				}
 				if (!code && !color) continue;
-				bufferHere = true;
+				if (code && !point.code) point.code = (false) ? allScreenCode : code;
+				if (color && !newColors[i]) newColors[i] = (false) ? allScreenColor : color;
+				const fg = color >> 4; const bg = color & 0x0F;
+				if (fg && !point.fg) point.fg = fg;
+				if (bg && !point.bg) point.bg = bg;
 				buffer.previous[index] = code;
 				buffer.prevColors[index] = color;
-				if (code != codeOnScreen || color != colorOnScreen) {
-					newCodes[i] = code;
-					newColors[i] = color;
-					this.addToOutput(output, code, color, x, y);
-					// process.stdout.write(this.moveCursorString(x, y) + '.');
-					break;
-				} // else process.stdout.write(this.moveCursorString(x, y) + '&');
+				newCodes[i] = code;
+				newColors[i] = color;
+				bufferHere = true;
+				if (point.code && point.fg && point.bg) break;
+				// if (code != codeOnScreen || color != colorOnScreen) {
+				// 	this.addToOutput(output, code, color, x, y);
+				// 	break;
+				// }
+			}
+			if (point.code || point.fg || point.bg) {
+				const outputColor = (point.fg << 4) + point.bg;
+				this.addToOutput(output, point.code, outputColor, x, y);
 			}
 			if (codeOnScreen) {
 				if (!bufferHere) {
-					const allScreenCode = this.allScreenCodes[i];
-					const allScreenColor = this.allScreenColors[i];
 					if (allScreenCode && (allScreenCode != codeOnScreen || allScreenColor != colorOnScreen)) {
 						newCodes[i] = allScreenCode;
 						newColors[i] = allScreenColor;
-						this.addToOutput(output, allScreenCode, allScreenColor, x, y);
+						// this.addToOutput(output, allScreenCode, allScreenColor, x, y);
 						// process.stdout.write(this.moveCursorString(x, y) + '*');
 					} else if (!allScreenCode) {
 						newCodes[i] = 0;
 						newColors[i] = 0;
-						this.addToOutput(output, 32, 0, x, y);
+						// this.addToOutput(output, 32, 0, x, y);
 						// process.stdout.write(this.moveCursorString(x, y) + '#');
 					}
 				}
+			// } else if (bufferHere) {
+			// 	process.stdout.write(this.moveCursorString(x, y) + '#');
 			}
 		}
 		for (const buffer of zArray) if (buffer.screen != 'all') buffer.clearDraw();
@@ -296,6 +376,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		this.previous = new Uint16Array(this.size);
 		this.colors = new Uint8Array(this.size);
 		this.prevColors = new Uint8Array(this.size);
+		this.changed = false;
 	}
 	// this.reset();
 
@@ -330,7 +411,9 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 			this.colors[index + i] = manager.color;
 		}
 		cursorIndex = index + string.length;
-		if (cursorIndex > this.size) cursorIndex = this.size;
+		// if (cursorIndex > this.size) cursorIndex = this.size;
+		if (cursorIndex > this.size) cursorIndex = 0;
+		this.changed = true;
 	}
 	this.cursorTo = (x, y) => cursorIndex = this.coordinateIndex(x, y);
 	this.write = function(string, fg = false, bg = false) {
@@ -363,6 +446,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		this.prevColors[index] = color;
 	}
 	this.render = function(clearLastFrame = true) {
+		if (!this.changed) return;
 		const output = [];
 		for (let i = 0; i < this.size; i++) {
 			let code = this.current[i];
@@ -408,9 +492,10 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 				}
 			}
 			if (this.screen == 'all' && differentThanPrev)
-				manager.saveAllScreen(drawingCode, drawingColorCode, x, y);
+				manager.saveAllScreen(drawingCode, drawingColorCode, x, y, this.zIndex);
 			this.moveToPrevious(i, code, colorCode);
 		}
+		this.changed = false;
 		if (true) process.stdout.write(output.join(''));
 		return this;
 	}
@@ -424,6 +509,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		manager.setBg(color);
 		if (foreground) manager.setFg(foreground);
 		this.colors.fill(manager.color);
+		this.changed = true;
 		return this;
 	}
 	this.fillPrevious = function(color, char = ' ', foreground = null) {
@@ -458,6 +544,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 	this.load = function() {
 		this.current = new Uint16Array(savedBuffer);
 		this.colors = new Uint8Array(savedColors);
+		this.changed = true;
 		return this;
 	}
 	this.loadArea = function(x, y, width = 1, height = 1) {
@@ -471,6 +558,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 			if (i % width == 0) index = this.coordinateIndex(x, y + (i / width));
 			else index++;
 		} while (i < area);
+		this.changed = true;
 		return this;
 	}
 	let hideBuffer, hideColors;
@@ -491,6 +579,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 	this.clearDraw = function() {
 		this.current = new Uint16Array(this.size);
 		this.colors = new Uint8Array(this.size);
+		this.changed = false;
 	}
 	this.clear = function(render = false) {
 		this.clearDraw();
@@ -506,6 +595,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		if (wasOutlined) this.outline('none', false);
 		this.current = tempBuffer;
 		this.colors = tempColorBuffer;
+		this.changed = true;
 		this.x = x; this.y = y;
 		if (!this.hidden) {
 			this.render();

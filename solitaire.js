@@ -6,7 +6,7 @@ const themes = require('./json/themes.json');
 
 //Temporary
 let jsonSettings = {
-	theme: 'dark',
+	theme: 'pipboy',
 	label: false,
 	draw: 1
 };
@@ -98,7 +98,7 @@ getData.game = () => [game.getData(), controller.game.getData()];
 let screen = 'menu';
 function switchTo(destination, data = []) {
 	display[destination].draw(...data);
-	display.buffer.preRender(destination);
+	display.buffer.preRenderNew(destination);
 	screen = destination;
 }
 

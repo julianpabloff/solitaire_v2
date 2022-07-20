@@ -55,7 +55,7 @@ const Display = function() {
 		// background.fill(this.theme['tab'][1], '.', this.theme['tom'][1]);
 		background.render();
 	}
-	this.fillBackground = color => { background.fill(color) };
+	this.fillBackground = color => {background.fill(color) };
 
 	const squareElements = {
 		none: {tl: ' ', tr: ' ', bl: ' ', br: ' ', h: ' ', v: ' '},
@@ -75,9 +75,10 @@ const Display = function() {
 		return buffer;
 	}
 
-	const debug = this.buffer.new(0, this.height - 1, columns, 2, 3, 'all');//.fill('red');
+	const debug = this.buffer.new(24, Math.floor(this.height / 2) - 10, columns, 2, 3, 'all');//.fill('red');
 	this.debug = function(item) {
-		this.setColor('tab');
+		// this.setColor('txt');
+		this.buffer.setColor('white', 'none');
 		debug.draw(item, 0, 0).render();
 	}
 	this.redrawTest = function() {
@@ -98,6 +99,8 @@ const Display = function() {
 		this.settings.resize();
 		this.game.resize();
 		this[screen].draw(...data);
+		this.buffer.setColor('white', 'none');
+		debug.draw('hellososoijsdoijsdofjasdofasdfoiajsdfoiasdfoijsadfoiasdfoiasjdfoisjdfoisajdfoiasdfoasjdfosaidfjoaoinecoienoaineof', 0, 0);
 		// this.buffer.logScreen(screen);
 		this.buffer.generateSavedScreen(screen);
 	}

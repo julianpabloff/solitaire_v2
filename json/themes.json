@@ -47,11 +47,11 @@
 		"c" : ["green", "none"],
 		"d" : ["green", "none"],
 		"s" : ["green", "none"],
-		"bac" : ["green", "black"],
+		"bac" : ["green", "none"],
 		"tab" : ["green", "black"],
 		"cur" : ["black", "green"],
 		"tom" : ["black", "green"],
-		"txt" : ["green", "black"],
+		"txt" : ["green", "none"],
 		"txtcur" : ["black", "green"],
 		"accent" : "green"
 	},

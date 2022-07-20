@@ -138,6 +138,7 @@ const GameDisplay = function(d) {
 	// Change to just render the buffers you need to - it feels slow
 	// Perhaps build it into the buffer using a changed boolean on the draw function
 	this.update = function(cardData, buffer) {
+		const start = Date.now();
 		this.draw(cardData, buffer);
 		stock.render();
 		foundations.render();
@@ -148,6 +149,7 @@ const GameDisplay = function(d) {
 		debugRight.render();
 		// debugLeft.outline('red');
 		// debugRight.outline('red');
+		// d.debug((Date.now() - start).toString());
 	}
 	this.up = function() {
 	}
