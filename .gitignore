@@ -7,3 +7,4 @@ node_modules
 *.un~
 
 package-lock.json
+design.txt

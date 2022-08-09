@@ -38,7 +38,6 @@ const MenuDisplay = function(d) {
 			const output = ' '.repeat(spacing) + optionText[i] + ' '.repeat(spacing);
 			optionsBuffer.draw(output, 1, 2 * i + 1);
 		}
-		d.debug('hellososoijsdoijsdofjasdofasdfoiajsdfoiasdfoijsadfoiasdfoiasjdfoisjdfoisajdfoiasdfoasjdfosaidfjoaoinecoienoaineof');
 	}
 	this.start = function(index = 0) {
 		d.buffer.screen = 'menu';

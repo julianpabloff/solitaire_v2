@@ -6,7 +6,7 @@ const themes = require('./json/themes.json');
 
 //Temporary
 let jsonSettings = {
-	theme: 'pipboy',
+	theme: 'normal',
 	label: false,
 	draw: 1
 };
@@ -17,6 +17,7 @@ const allSettings = {
 	draw: [1, 3]
 };
 for (const theme of themes) allSettings.theme.push(theme.title);
+allSettings.theme.push('manage...');
 function applySettings(settings) {
 	display.setTheme(settings.theme);
 	game.drawAmount = settings.draw;
@@ -26,7 +27,8 @@ for (const k of Object.keys(allSettings))
 for (const k of Object.keys(jsonSettings))
 	controller.settings.code.push(allSettings[k].indexOf(jsonSettings[k]));
 display.themes = themes;
-display.settings.importThemes(allSettings.theme);
+display.settings.importThemes();
+display.themeManager.importThemes();
 
 applySettings(jsonSettings);
 display.init();
@@ -69,6 +71,9 @@ update.settings = function(command) {
 			controller.settings.reset();
 			switchTo('menu', [controller.menu.reset()]);
 			if (themeChanged) display.applyBackground();
+			break;
+		case 'manageThemes':
+			switchTo('themeManager', [null]);
 	}
 }
 update.game = function(command) {

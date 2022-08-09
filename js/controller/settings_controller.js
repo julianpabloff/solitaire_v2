@@ -27,6 +27,9 @@ const SettingsController = function(c) {
 			if (this.up) this.buffer[1] = c.cycle(this.buffer[1], this.counts[this.buffer[0]], false);
 			else if (this.down) this.buffer[1] = c.cycle(this.buffer[1], this.counts[this.buffer[0]]);
 			else if (this.enter) {
+				if (this.buffer[1] == this.counts[0] - 1) {
+					return c.outputCommand('manageThemes', null);
+				}
 				this.code[this.buffer[0]] = this.buffer[1];
 				this.buffer.pop();
 				if (this.buffer[0] == 0 || this.buffer[0] == 1) {

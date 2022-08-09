@@ -1,7 +1,9 @@
 const BufferManager = require('./buffer.js');
+const BufferManager24Bit = require('./buffer_24bit.js');
 const MenuDisplay = require('./menu_display.js');
 const GameDisplay = require('./game_display.js');
 const SettingsDisplay = require('./settings_display.js');
+const ThemeManagerDisplay = require('./themeManager_display.js');
 
 const Display = function() {
 	this.init = function() {
@@ -31,9 +33,6 @@ const Display = function() {
 	this.centerString = (string, width = columns) => { return Math.floor(width / 2 - string.length / 2); }
 
 	this.buffer = new BufferManager();
-	this.menu = new MenuDisplay(this);
-	this.game = new GameDisplay(this);
-	this.settings = new SettingsDisplay(this);
 	const background = this.buffer.new(0, 0, columns, rows, 0, 'all');
 
 	// this.themes = require('../../json/themes.json');
@@ -43,6 +42,18 @@ const Display = function() {
 	}
 	this.setTheme = function(name) {
 		this.theme = this.getTheme(name);
+	}
+	this.themes = [];
+	this.exportThemesForMenu = function() {
+		const output = [];
+		// let i = 0;
+		for (const theme of this.themes) {
+			output.push(theme.title.toUpperCase());
+			// if (i < this.themes.length - 1) output.push(theme.title.toUpperCase())
+			// else output.push(theme.title);
+			// i++;
+		}
+		return output;
 	}
 	this.setColor = function(attribute) {
 		const color = this.theme[attribute];
@@ -74,6 +85,33 @@ const Display = function() {
 		buffer.draw(piece.bl + piece.h.repeat(width - 2) + piece.br, x, y + height - 1);
 		return buffer;
 	}
+	const previewJSON = require('../../json/preview.json');
+	this.drawPreview = function(buffer, x, y, scene, theme, labels = false) {
+		const preview = previewJSON[scene];
+		const previewRows = preview.text.length;
+		for (let i = 0; i < previewRows; i++) {
+			buffer.cursorTo(x, y + i);
+			const textIndex = i == 5 && !labels ? 4 : i;
+			let position = 0;
+			for (const item of preview.color[i]) {
+				const color = theme[item[0]];
+				if (color[1] == 'none') color[1] = 'black';
+				this.buffer.setColor(color[0], color[1]);
+				const count = item[1];
+				for (let j = 0; j < count; j++) {
+					let char = preview.text[textIndex][position];
+					if (!labels) {
+						switch(char.charCodeAt(0)) {
+							case 9824: case 9827: case 9829: case 9830:
+								char = ' ';
+						}
+					}
+					buffer.write(char);
+					position++;
+				}
+			}
+		}
+	}
 
 	const debug = this.buffer.new(24, Math.floor(this.height / 2) - 10, columns, 2, 3, 'all');//.fill('red');
 	this.debug = function(item) {
@@ -99,12 +137,14 @@ const Display = function() {
 		this.settings.resize();
 		this.game.resize();
 		this[screen].draw(...data);
-		this.buffer.setColor('white', 'none');
-		debug.draw('hellososoijsdoijsdofjasdofasdfoiajsdfoiasdfoijsadfoiasdfoiasjdfoisjdfoisajdfoiasdfoasjdfosaidfjoaoinecoienoaineof', 0, 0);
 		// this.buffer.logScreen(screen);
 		this.buffer.generateSavedScreen(screen);
 	}
 
+	this.menu = new MenuDisplay(this);
+	this.game = new GameDisplay(this);
+	this.settings = new SettingsDisplay(this);
+	this.themeManager = new ThemeManagerDisplay(this);
 }
 
 module.exports = Display;

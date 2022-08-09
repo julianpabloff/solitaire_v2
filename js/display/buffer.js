@@ -67,7 +67,7 @@ const BufferManager = function() {
 	this.color = 0;
 	this.lastRenderedColor = 0;
 	this.lastRenderedLocation = {x: 0, y: 0};
-	this.colorMap = { none: 0, black: 1, red: 2, green: 3, yellow: 4, blue: 5, magenta: 6, cyan: 7, white: 8 };
+	this.colorMap = { none: 0, black: 1, red: 2, green: 3, yellow: 4, blue: 5, magenta: 6, cyan: 7, white: 8, background: 9 };
 	this.setFg = function(color) {
 		const fgCode = this.colorMap[color];
 		this.color = (fgCode << 4) + (this.color & 0x0F);
@@ -323,7 +323,7 @@ const BufferManager = function() {
 		const fgCode = color >> 4;
 		const bgCode = color & 0x0F;
 		if (color != this.lastRenderedColor) {
-			if (fgCode == 0 || bgCode == 0) output.push(this.resetColorString);
+			if (fgCode == 0 || bgCode == 0 || fgCode == 9 || bgCode == 9) output.push(this.resetColorString);
 			if (fgCode > 0) output.push(this.fgToString(fgCode));
 			if (bgCode > 0) output.push(this.bgToString(bgCode));
 		}
