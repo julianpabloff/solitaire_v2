@@ -69,10 +69,14 @@ const GameDisplay = function(d) {
 	}
 	// FOUNDATIONS
 	const foundations = d.buffer.new(foundationsX[0], topY, cardWidth * 4 + margin * 3, cardHeight, 1, 'game');
-	const drawFoundations = function() {
+	const drawFoundations = function(foundationsData) {
 		for (let i = 0; i < 4; i++) {
 			const x = (cardWidth + margin) * i;
-			drawCardSpot(foundations, x, 0);
+			const foundation = foundationsData[i];
+			const foundationLength = foundation.length;
+			if (foundationLength) {
+				drawCard(foundations, foundation[foundationLength - 1], x, 0);
+			} else drawCardSpot(foundations, x, 0);
 		}
 	}
 	// PILES
@@ -82,7 +86,9 @@ const GameDisplay = function(d) {
 	const drawPiles = function(pilesData) {
 		for (let i = 0; i < pilesData.length; i++) {
 			const cards = pilesData[i];
+			if (cards.length)
 			for (let j = 0; j < cards.length; j++) drawCard(piles[i], cards[j], 0, 2 * j);
+			else piles[i].clearDraw();
 		}
 	}
 	// NAVIGATION
@@ -91,7 +97,12 @@ const GameDisplay = function(d) {
 		const cursor = ' '.repeat(cardWidth);
 		const cursorY = navigation.bottom;
 		d.setColor('cur');
-		navigation.draw(cursor, relativePileX(buffer.index), cursorY);
+		navigation.draw(cursor, relativePileX(buffer[buffer.length == 2 | 0].index), cursorY);
+		if (buffer.length == 2) {
+			d.setColor('tom');
+			navigation.draw(cursor, relativePileX(buffer[0].index), cursorY);
+		} else {
+		}
 	}
 
 	// DEBUG
@@ -100,7 +111,7 @@ const GameDisplay = function(d) {
 	const debugRight = d.buffer.new(d.width - 39, 1, 37, 20, 3, 'game');
 	const drawDebug = function(cardData, buffer) {
 		d.setColor('tab');
-		debugLeft.draw('STOCK', 0, 0).draw('PILES', 10, 0);
+		debugLeft.draw('STOCK', 0, 0).draw('PILES', 10, 0).draw('FOUNDATIONS', 10, 9);
 		// debugTop.draw('FOUNDATIONS', 0, 0);
 		function drawCardDebug(card, x, y) {
 			d.setColor(card.suit);
@@ -113,23 +124,31 @@ const GameDisplay = function(d) {
 			const cards = cardData.piles[i];
 			for (let c = 0; c < cards.length; c++) drawCardDebug(cards[c], 4 * i + 10, 1 + c);
 		}
-		// d.buffer.setBg('green');
-		// for (let i = 0; i < 4; i++) {
-		// 	for (let j = 0; j < 13; j++) debugTop.draw('   ', 4 * j, 1 + i * 2);
-		// }
+		for (let i = 0; i < cardData.foundations.length; i++) {
+			const cards = cardData.foundations[i];
+			for (let c = 0; c < cards.length; c++) drawCardDebug(cards[c], 4 * i + 10, 10 + c);
+		}
 
 		debugRight.draw('CONTROLLER', 0, 0, ...d.theme['tab']);
-		debugRight.draw('type', 0, 2).draw('index', 0, 3);
-		const h = d.theme['h'];
-		// const accentColor = [h[(h[0] == 'black' || h[0] == 'white') ? 1 : 0], d.theme['tab'][1]];
+		debugRight.draw('type', 0, 2).draw('index', 0, 3).draw('depth', 0, 4);
 		const accentColor = [d.theme['accent'], d.theme['tab'][1]];
 		d.buffer.setColor(...accentColor);
-		debugRight.draw('pile', 5, 2).draw(buffer.index.toString(), 6, 3);
+		debugRight.draw(buffer[0].type, 5, 2).draw(buffer[0].index.toString(), 6, 3);
+		debugRight.draw(buffer[0].depth.toString(), 6, 4);
+
+		if (buffer.length > 1) {
+			d.setColor('tab')
+			debugRight.draw('TO MODE', 0, 6);
+			debugRight.draw('type', 0, 8).draw('index', 0, 9).draw('depth', 0, 10);
+			d.buffer.setColor(...accentColor);
+			debugRight.draw(buffer[1].type, 5, 8).draw(buffer[1].index.toString(), 6, 9);
+			debugRight.draw(buffer[1].depth.toString(), 6, 10);
+		}
 	}
 
 	this.draw = function(cardData, buffer) {
 		drawDebug(cardData, buffer);
-		drawFoundations();
+		drawFoundations(cardData.foundations);
 		drawStock(cardData.stock);
 		drawWaste(cardData.waste);
 		drawPiles(cardData.piles);

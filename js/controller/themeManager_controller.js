@@ -12,5 +12,14 @@ const ThemeManagerController = function(c) {
 	}
 	this.up = this.down = this.enter = this.space = this.esc = false;
 
-	this.buffer = {option: 0, optionSelected: false};
+	this.buffer = [0];
+	this.counts = [];
+	this.code = [];
+
+	this.handleScreen = function() {
+		if (this.esc) return c.outputCommand('back');
+		return c.outputCommand('move', null);
+	}
 }
+
+module.exports = ThemeManagerController;

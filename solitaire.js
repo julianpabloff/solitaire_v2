@@ -6,7 +6,7 @@ const themes = require('./json/themes.json');
 
 //Temporary
 let jsonSettings = {
-	theme: 'normal',
+	theme: 'ice',
 	label: false,
 	draw: 1
 };
@@ -73,27 +73,40 @@ update.settings = function(command) {
 			if (themeChanged) display.applyBackground();
 			break;
 		case 'manageThemes':
+			controller.settings.reset();
 			switchTo('themeManager', [null]);
 	}
 }
-update.game = function(command) {
-	function updateDisplay() {
-		const data = {
-			cards: game.getData(),
-			buffer: controller.game.buffer
-		};
-		display.game.update(data);
+update.themeManager = function(command) {
+	switch(command.type) {
+		case 'back':
+			switchTo('settings', controller.settings.getData());
 	}
+}
+update.game = function(command) {
+	// function updateDisplay() {
+	// 	const data = {
+	// 		cards: game.getData(),
+	// 		buffer: controller.game.buffer
+	// 	};
+	// 	display.game.update(data);
+	// }
 	controller.game.pileCounts = game.getPileData();
 	switch (command.type) {
-		case 'up': display.game.up(); break;
 		case 'flip':
 			game.flipDeck();
+			break;
+		case 'submit':
+			if (game.pileToFoundation(command.data)) {
+				if (!game.piles[command.data].length) {
+					controller.game.buffer[0].index = controller.game.cycle(controller.game.buffer[0].index);
+				}
+			}
 			break;
 		case 'move': break;
 		default: return false;
 	}
-	display.game.update(game.getData(), command.data);
+	display.game.update(game.getData(), controller.game.getData());
 }
 const getData = {};
 getData.menu = () => [controller.menu.getData()];

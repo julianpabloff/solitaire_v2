@@ -1,10 +1,12 @@
 const MenuController = require('./menu_controller.js');
 const SettingsController = require('./settings_controller.js');
+const ThemeManagerController = require('./themeManager_controller.js');
 const GameController = require('./game_controller.js');
 
 const Controller = function() {
 	this.menu = new MenuController(this);
 	this.settings = new SettingsController(this);
+	this.themeManager = new ThemeManagerController(this);
 	this.game = new GameController(this);
 
 	this.cycle = function(number, count, up = true) {

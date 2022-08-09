@@ -579,7 +579,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 	this.clearDraw = function() {
 		this.current = new Uint16Array(this.size);
 		this.colors = new Uint8Array(this.size);
-		this.changed = false;
+		this.changed = true;
 	}
 	this.clear = function(render = false) {
 		this.clearDraw();

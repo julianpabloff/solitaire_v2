@@ -1,6 +1,7 @@
 const Game = function() {
 	let cards = [];
 	const suits = ['h', 'c', 'd', 's'];
+	const suitIndex = suit => suits.indexOf(suit);
 	this.piles = [];
 	this.stock = [];
 	this.waste = [];
@@ -76,6 +77,29 @@ const Game = function() {
 				} else deckStartOver = true;
 			}
 		}
+	}
+	this.validSubmit = function(card) {
+		const cardSuitIndex = suits.indexOf(card.suit);
+		const foundation = this.foundations[cardSuitIndex];
+		if (!foundation.length) {
+			if (card.value == 1) return true;
+			else return false;
+		}
+		const target = foundation[foundation.length - 1];
+		if (card.value == target.value + 1) return true;
+		else return false;
+	}
+	this.pileToFoundation = function(index) {
+		const pile = this.piles[index];
+		if (!pile.length) return false;
+		const card = pile[pile.length - 1];
+		if (this.validSubmit(card)) {
+		// if (true) {
+			this.foundations[suitIndex(card.suit)].push(pile.pop());
+			if (pile.length) pile[pile.length - 1].faceUp = true;
+			return true;
+		}
+		return false;
 	}
 	this.getPileData = function() {
 		let output = [];
