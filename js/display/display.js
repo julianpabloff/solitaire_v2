@@ -94,12 +94,13 @@ const Display = function() {
 			const textIndex = i == 5 && !labels ? 4 : i;
 			let position = 0;
 			for (const item of preview.color[i]) {
-				const color = theme[item[0]];
+				const changeToModeCursor = item[0] == 'tom' && theme['tom'][1] == theme['cur'][1];
+				const color = changeToModeCursor ? theme['tab'] : theme[item[0]];
 				if (color[1] == 'none') color[1] = 'black';
 				this.buffer.setColor(color[0], color[1]);
 				const count = item[1];
 				for (let j = 0; j < count; j++) {
-					let char = preview.text[textIndex][position];
+					let char = changeToModeCursor ? '░' : preview.text[textIndex][position];
 					if (!labels) {
 						switch(char.charCodeAt(0)) {
 							case 9824: case 9827: case 9829: case 9830:

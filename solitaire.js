@@ -40,6 +40,7 @@ update.menu = function(command) {
 		case 'newGame': 
 			game.shuffle().dealCards();
 			controller.game.pileCounts = game.getPileData();
+			display.game.debugPileCounts(controller.game.pileCounts);
 			// const data = [{
 			// 	cards: game.getData(),
 			// 	buffer: controller.game.buffer
@@ -91,29 +92,33 @@ update.game = function(command) {
 			game.flipDeck();
 			break;
 		case 'move': break;
-		// case 'submit':
-		// 	if (game.pileToFoundation(command.data)) {
-		// 		if (!game.piles[command.data].length) {
-		// 			controller.game.buffer[0].index = controller.game.cycle(controller.game.buffer[0].index);
-		// 		}
-		// 	}
-		// 	break;
+		case 'undo':
+			if (undoSteps.length) {
+				const undoCommand = undoSteps.pop();
+				game[undoCommand.type]['undo'](undoCommand.path, undoCommand.depth);
+				display.game.debugUndoCommand(undoSteps);
+			}
+			break;
 		default:
-			actionRan = game[command.type](command.data);
+			actionRan = game[command.type](...command.data);
 			display.game.debugCommand(command.type, actionRan != false);
 	}
 	if (actionRan) {
 		switch (command.type) {
+			case 'pileToPile':
+				controller.game.buffer.shift();
+				break;
 			case 'pileToFoundation':
-				if (!game.piles[command.data].length)
+				if (!game.piles[command.data[0]].length)
 					controller.game.buffer[0].index = controller.game.cycle(controller.game.buffer[0].index);
 				break;
 		}
 		undoSteps.push(actionRan);
 		display.game.debugUndoCommand(undoSteps);
 	}
-	display.game.update(game.getData(), controller.game.getData());
 	controller.game.pileCounts = game.getPileData();
+	display.game.debugPileCounts(controller.game.pileCounts);
+	display.game.update(game.getData(), controller.game.getData());
 }
 const getData = {};
 getData.menu = () => [controller.menu.getData()];

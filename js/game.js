@@ -78,8 +78,14 @@ const Game = function() {
 			}
 		}
 	}
+	this.validPair = function(card, target) {
+		if (!card) return false;
+		if (!target) return (card.value == 13);
+		if (card.value == 1) return false;
+		return suitIndex(card.suit) % 2 != suitIndex(target.suit) % 2 && card.value + 1 == target.value;
+	}
 	this.validSubmit = function(card) {
-		const cardSuitIndex = suits.indexOf(card.suit);
+		const cardSuitIndex = suitIndex(card.suit);
 		const foundation = this.foundations[cardSuitIndex];
 		if (!foundation.length) {
 			if (card.value == 1) return true;
@@ -88,6 +94,33 @@ const Game = function() {
 		const target = foundation[foundation.length - 1];
 		if (card.value == target.value + 1) return true;
 		else return false;
+	}
+	this.pileToPile = function(firstIndex, secondIndex, depth, undo = false) {
+		const firstPile = this.piles[firstIndex];
+		const secondPile = this.piles[secondIndex];
+
+		let absoluteDepth = 0;
+		if (undo) absoluteDepth = depth;
+		else {
+			for (const card of firstPile) {
+				if (card.faceUp) break;
+				absoluteDepth++;
+			}
+			absoluteDepth += depth;
+		}
+
+		const secondPileLength = secondPile.length;
+		if (undo || this.validPair(firstPile[absoluteDepth], secondPile[secondPileLength - 1])) {
+			const depthForUndoCommand = secondPileLength ? secondPileLength : 0;
+			this.piles[secondIndex] = secondPile.concat(firstPile.splice(absoluteDepth, firstPile.length - absoluteDepth));
+			if (undo && secondPile.length) secondPile[secondPileLength - 1].faceUp = false;
+			else if (firstPile.length) firstPile[firstPile.length - 1].faceUp = true;
+			return {type: 'pileToPile', path: [secondIndex, firstIndex], depth: depthForUndoCommand};
+		}
+		return false;
+	}
+	this.pileToPile.undo = (path, depth) => {
+		this.pileToPile(path[0], path[1], depth, true);
 	}
 	this.pileToFoundation = function(index) {
 		const pile = this.piles[index];

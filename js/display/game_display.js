@@ -94,12 +94,16 @@ const GameDisplay = function(d) {
 	// NAVIGATION
 	const navigation = d.buffer.new(cardX, topY - 2, totalWidth, 15, 2, 'game');
 	const drawController = function(buffer) {
-		const cursor = ' '.repeat(cardWidth);
+		let cursor = ' '.repeat(cardWidth);
 		const cursorY = navigation.bottom;
 		d.setColor('cur');
 		navigation.draw(cursor, relativePileX(buffer[buffer.length == 2 | 0].index), cursorY);
 		if (buffer.length == 2) {
 			d.setColor('tom');
+			if (d.theme['cur'][1] == d.theme['tom'][1]) { // Check for same color, like in pipboy theme
+				d.setColor('tab');
+				cursor = '░'.repeat(cardWidth);
+			}
 			navigation.draw(cursor, relativePileX(buffer[0].index), cursorY);
 		} else {
 		}
@@ -150,6 +154,14 @@ const GameDisplay = function(d) {
 		d.setColor('tab');
 		debugRight.draw('HISTORY (command reversed for undo)', 0, 0);
 	}
+	this.debugPileCounts = function(pileCounts) {
+		d.setColor('tab');
+		debugTop.draw('pile counts ', 15, 0);
+		d.buffer.setFg(d.theme['accent']);
+		for (const count of pileCounts) {
+			debugTop.write(count.toString() + ' ');
+		}
+	}
 	this.debugCommand = function(commandType, ran) {
 		d.setColor('tab');
 		debugTop.draw('submitted ', 0, 6);
@@ -181,7 +193,7 @@ const GameDisplay = function(d) {
 			d.setColor('tab');
 			debugRight.draw('depth', 23, y + 1);
 			d.buffer.setFg(d.theme['accent']);
-			const depthString = command.depth ? command.depth.toString() : 'null';
+			const depthString = command.depth == null ? 'null' : command.depth.toString() ;
 			debugRight.draw(depthString, 29, y + 1);
 			d.setColor('tab');
 			debugRight.draw(divider, 0, y + 2);
