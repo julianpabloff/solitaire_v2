@@ -83,30 +83,37 @@ update.themeManager = function(command) {
 			switchTo('settings', controller.settings.getData());
 	}
 }
+const undoSteps = [];
 update.game = function(command) {
-	// function updateDisplay() {
-	// 	const data = {
-	// 		cards: game.getData(),
-	// 		buffer: controller.game.buffer
-	// 	};
-	// 	display.game.update(data);
-	// }
-	controller.game.pileCounts = game.getPileData();
+	let actionRan = false;
 	switch (command.type) {
 		case 'flip':
 			game.flipDeck();
 			break;
-		case 'submit':
-			if (game.pileToFoundation(command.data)) {
-				if (!game.piles[command.data].length) {
-					controller.game.buffer[0].index = controller.game.cycle(controller.game.buffer[0].index);
-				}
-			}
-			break;
 		case 'move': break;
-		default: return false;
+		// case 'submit':
+		// 	if (game.pileToFoundation(command.data)) {
+		// 		if (!game.piles[command.data].length) {
+		// 			controller.game.buffer[0].index = controller.game.cycle(controller.game.buffer[0].index);
+		// 		}
+		// 	}
+		// 	break;
+		default:
+			actionRan = game[command.type](command.data);
+			display.game.debugCommand(command.type, actionRan != false);
+	}
+	if (actionRan) {
+		switch (command.type) {
+			case 'pileToFoundation':
+				if (!game.piles[command.data].length)
+					controller.game.buffer[0].index = controller.game.cycle(controller.game.buffer[0].index);
+				break;
+		}
+		undoSteps.push(actionRan);
+		display.game.debugUndoCommand(undoSteps);
 	}
 	display.game.update(game.getData(), controller.game.getData());
+	controller.game.pileCounts = game.getPileData();
 }
 const getData = {};
 getData.menu = () => [controller.menu.getData()];
@@ -130,9 +137,9 @@ process.stdin.on('keypress', function(chunk, key) {
 		console.clear();
 		process.exit();
 	}
-	else if (keyPressed == 'f') process.stdout.write('\x1b[S');
-	else if (keyPressed == 'v') process.stdout.write('\x1b[T');
-	else if (keyPressed == 'i') display.redrawTest();
+	// else if (keyPressed == 'f') process.stdout.write('\x1b[S');
+	// else if (keyPressed == 'v') process.stdout.write('\x1b[T');
+	// else if (keyPressed == 'i') display.redrawTest();
 	const keyValid = controller[screen].update(keyPressed);
 	if (keyValid) {
 		const action = controller[screen].handleScreen();

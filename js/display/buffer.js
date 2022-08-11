@@ -542,6 +542,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		return this;
 	}
 	this.load = function() {
+		if (!savedBuffer) return;
 		this.current = new Uint16Array(savedBuffer);
 		this.colors = new Uint8Array(savedColors);
 		this.changed = true;

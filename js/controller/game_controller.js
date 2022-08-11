@@ -11,7 +11,7 @@ const GameController = function(c) {
 	}
 	this.update = function(key) {
 		this.up = this.down = this.left = this.right = false;
-		this.space = this.to = this.submit = this.esc = false;
+		this.space = this.to = this.enter = this.esc = false;
 		switch(key) {
 			case 'up' : case 'k' : this.up = true; return true;
 			case 'down' : case 'j' : this.down = true; return true;
@@ -19,7 +19,7 @@ const GameController = function(c) {
 			case 'right' : case 'l' : this.right = true; return true;
 			case 'space' : this.space = true; return true;
 			case 't' : this.to = true; return true;
-			case 'return' : this.submit = true; return true;
+			case 'return' : this.enter = true; return true;
 			case 'escape' : this.esc = true; return true;
 			// case '1' : this.jumpTo = 0; return true;
 			// case '2' : this.jumpTo = 1; return true;
@@ -32,7 +32,7 @@ const GameController = function(c) {
 		return false;
 	}
 	this.up = this.down = this.left = this.right = false;
-	this.space = this.to = this.submit = this.esc = false;
+	this.space = this.to = this.enter = this.esc = false;
 
 	this.buffer = [{type: 'pile', index: 3, depth: 0, fullDepth: 3}];
 	const bufferBeforeToMode = {type: 'pile', index: 3, depth: 0, fullDepth: 3};
@@ -49,17 +49,15 @@ const GameController = function(c) {
 				return c.outputCommand('flip', this.buffer);
 			} else if (this.to) {
 				this.toMode = true;
-				const fullDepth = 3;
 				bufferBeforeToMode.type = first.type;
 				bufferBeforeToMode.index = first.index;
 				bufferBeforeToMode.depth = 0;
-				bufferBeforeToMode.fullDepth = fullDepth;
-				this.buffer.push({type: 'pile', index: bufferBeforeToMode.index, depth: 0, fullDepth: fullDepth});
+				this.buffer.push({type: 'pile', index: bufferBeforeToMode.index, depth: 0});
 				return c.outputCommand('move', this.buffer);
-			} else if (this.submit) {
-				return c.outputCommand('submit', this.buffer[0].index);
+			} else if (this.enter) {
+				return c.outputCommand('pileToFoundation', this.buffer[0].index);
 			}
-		} else {
+		} else { // buffer.length == 2
 			const second = this.buffer[1];
 			if (this.left) {
 				second.index = this.cycle(second.index, false, false);

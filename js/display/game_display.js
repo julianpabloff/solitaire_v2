@@ -107,8 +107,8 @@ const GameDisplay = function(d) {
 
 	// DEBUG
 	const debugLeft = d.buffer.new(2, 1, 37, 25, 3, 'game');
-	const debugTop = d.buffer.new(42, 1, 51, 8, 3, 'game');
-	const debugRight = d.buffer.new(d.width - 39, 1, 37, 20, 3, 'game');
+	const debugTop = d.buffer.new(52, 1, 51, 8, 3, 'game');
+	const debugRight = d.buffer.new(d.width - 39, 1, 37, 40, 3, 'game');
 	const drawDebug = function(cardData, buffer) {
 		d.setColor('tab');
 		debugLeft.draw('STOCK', 0, 0).draw('PILES', 10, 0).draw('FOUNDATIONS', 10, 9);
@@ -129,21 +129,65 @@ const GameDisplay = function(d) {
 			for (let c = 0; c < cards.length; c++) drawCardDebug(cards[c], 4 * i + 10, 10 + c);
 		}
 
-		debugRight.draw('CONTROLLER', 0, 0, ...d.theme['tab']);
-		debugRight.draw('type', 0, 2).draw('index', 0, 3).draw('depth', 0, 4);
+		debugTop.draw('CONTROLLER', 0, 0, ...d.theme['tab']);
+		debugTop.draw('type', 0, 2).draw('index', 0, 3).draw('depth', 0, 4);
 		const accentColor = [d.theme['accent'], d.theme['tab'][1]];
 		d.buffer.setColor(...accentColor);
-		debugRight.draw(buffer[0].type, 5, 2).draw(buffer[0].index.toString(), 6, 3);
-		debugRight.draw(buffer[0].depth.toString(), 6, 4);
+		debugTop.draw(buffer[0].type, 5, 2).draw(buffer[0].index.toString(), 6, 3);
+		debugTop.draw(buffer[0].depth.toString(), 6, 4);
 
 		if (buffer.length > 1) {
-			d.setColor('tab')
-			debugRight.draw('TO MODE', 0, 6);
-			debugRight.draw('type', 0, 8).draw('index', 0, 9).draw('depth', 0, 10);
+			d.setColor('tab');
+			debugTop.draw('-->', 10, 3);
+			debugTop.draw('type', 16, 2).draw('index', 16, 3).draw('depth', 16, 4);
 			d.buffer.setColor(...accentColor);
-			debugRight.draw(buffer[1].type, 5, 8).draw(buffer[1].index.toString(), 6, 9);
-			debugRight.draw(buffer[1].depth.toString(), 6, 10);
+			debugTop.draw(buffer[1].type, 21, 2).draw(buffer[1].index.toString(), 22, 3);
+			debugTop.draw(buffer[1].depth.toString(), 22, 4);
 		}
+
+		// Undo
+		debugRight.load();
+		d.setColor('tab');
+		debugRight.draw('HISTORY (command reversed for undo)', 0, 0);
+	}
+	this.debugCommand = function(commandType, ran) {
+		d.setColor('tab');
+		debugTop.draw('submitted ', 0, 6);
+		d.buffer.setFg(d.theme['accent']);
+		debugTop.write(commandType);
+		d.setColor('tab');
+		debugTop.draw('ran ', 0, 7);
+		d.buffer.setFg(d.theme['accent']);
+		debugTop.write(ran.toString());
+	}
+	this.debugUndoCommand = function(undoSteps) {
+		d.setColor('tab');
+		const divider = '-'.repeat(debugRight.width);
+		debugRight.draw(divider, 0, 1);
+		let j = 0;
+		for (let i = undoSteps.length - 1; i >= 0; i--) {
+			if (j > 11) break;
+			const command = undoSteps[i];
+			// d.setColor(...accentColor);
+			const y = 2 + 3 * j;
+			d.setColor('tab');
+			debugRight.draw(command.type, 0, y).draw('index', 0, y + 1);
+			d.buffer.setFg(d.theme['accent']);
+			debugRight.draw(command.path[0].toString(), 6, y + 1);
+			d.setColor('tab');
+			debugRight.draw('--> index', 8, y + 1);
+			d.buffer.setFg(d.theme['accent']);
+			debugRight.draw(command.path[1].toString(), 18, y + 1);
+			d.setColor('tab');
+			debugRight.draw('depth', 23, y + 1);
+			d.buffer.setFg(d.theme['accent']);
+			const depthString = command.depth ? command.depth.toString() : 'null';
+			debugRight.draw(depthString, 29, y + 1);
+			d.setColor('tab');
+			debugRight.draw(divider, 0, y + 2);
+			j++;
+		}
+		debugRight.save();
 	}
 
 	this.draw = function(cardData, buffer) {

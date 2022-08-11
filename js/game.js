@@ -95,9 +95,10 @@ const Game = function() {
 		const card = pile[pile.length - 1];
 		if (this.validSubmit(card)) {
 		// if (true) {
-			this.foundations[suitIndex(card.suit)].push(pile.pop());
+			const foundationIndex = suitIndex(card.suit);
+			this.foundations[foundationIndex].push(pile.pop());
 			if (pile.length) pile[pile.length - 1].faceUp = true;
-			return true;
+			return {type: 'foundationToPile', path: [foundationIndex, index], depth: null};
 		}
 		return false;
 	}
