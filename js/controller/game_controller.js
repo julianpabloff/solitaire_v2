@@ -3,6 +3,8 @@ const GameController = function(c) {
 	this.update = function(key) {
 		up = down = left = right = false;
 		space = to = enter = esc = undo = false;
+		wasteShortcut = foundationShortcut = false;
+		jumpTo = null;
 		switch(key) {
 			case 'up' : case 'k' : up = true; return true;
 			case 'down' : case 'j' : down = true; return true;
@@ -13,37 +15,62 @@ const GameController = function(c) {
 			case 'return' : enter = true; return true;
 			case 'escape' : esc = true; return true;
 			case 'u' : undo = true; return true;
-			// case '1' : this.jumpTo = 0; return true;
-			// case '2' : this.jumpTo = 1; return true;
-			// case '3' : this.jumpTo = 2; return true;
-			// case '4' : this.jumpTo = 3; return true;
-			// case '5' : this.jumpTo = 4; return true;
-			// case '6' : this.jumpTo = 5; return true;
-			// case '7' : this.jumpTo = 6; return true;
+			case '1' : jumpTo = 0; return true;
+			case '2' : jumpTo = 1; return true;
+			case '3' : jumpTo = 2; return true;
+			case '4' : jumpTo = 3; return true;
+			case '5' : jumpTo = 4; return true;
+			case '6' : jumpTo = 5; return true;
+			case '7' : jumpTo = 6; return true;
+			case 'w' : wasteShortcut = true; return true;
+			case 'f' : foundationShortcut = true; return true;
 		}
 		return false;
 	}
-	let up, down, left, right, space, to, enter, esc, undo;
+	let up, down, left, right, space, to, enter, esc, undo, jumpTo, wasteShortcut, foundationShortcut;
 
 	this.buffer = [{type: 'pile', index: 3, depth: 0, fullDepth: 3}];
-	const bufferBeforeToMode = {type: 'pile', index: 3, depth: 0, fullDepth: 3};
+	let bufferTypeBeforeToMode = 'pile';
 	this.handleScreen = function() {
 		const first = this.buffer[0];
+		const enterToMode = function(index, typeToSave = first.type) {
+			bufferTypeBeforeToMode = typeToSave;
+			this.buffer.push({type: 'pile', index: index, depth: 0});
+			return c.outputCommand('move', null);
+		}.bind(this);
 		if (this.buffer.length == 1) {
-			if (left) {
+			if (left && first.type == 'pile') {
 				first.index = this.cycle(first.index, false);
 				return c.outputCommand('move', null);
-			} else if (right) {
+			} else if (right && first.type == 'pile') {
 				first.index = this.cycle(first.index);
 				return c.outputCommand('move', null);
 			} else if (space) {
 				return c.outputCommand('flip', null);
 			} else if (to) {
-				bufferBeforeToMode.type = first.type;
-				bufferBeforeToMode.index = first.index;
-				bufferBeforeToMode.depth = 0;
-				this.buffer.push({type: 'pile', index: bufferBeforeToMode.index, depth: 0});
+				return enterToMode(first.index);
+			} else if (jumpTo != null) {
+				let secondIndex = first.index;
+				if (first.type == 'waste') {
+					first.type = 'pile';
+					secondIndex = jumpTo;
+				}
+				first.index = jumpTo;
+				first.depth = 0;
+				return enterToMode(secondIndex);
+			} else if (up && first.type == 'pile' && this.wasteCount) {
+				first.type = 'waste';
+				first.depth = this.wasteCount;
 				return c.outputCommand('move', null);
+			} else if (down && first.type == 'waste') {
+				first.type = 'pile';
+				first.depth = 0;
+				return c.outputCommand('move', null);
+			} else if (wasteShortcut && this.wasteCount) {
+				const typeToSave = first.type;
+				first.type = 'waste';
+				first.depth = this.wasteCount;
+				return enterToMode(first.index, typeToSave);
 			} else if (enter) {
 				return c.outputCommand('pileToFoundation', [first.index]);
 			} else if (undo) {
@@ -51,6 +78,16 @@ const GameController = function(c) {
 			}
 		} else { // buffer.length == 2
 			const second = this.buffer[1];
+			const submitBuffer = function() {
+				const index = first.index; const depth = first.depth;
+				const secondIndex = second.index;
+				this.buffer.shift();
+				if (first.type == 'pile') {
+					if (index != secondIndex) return c.outputCommand('pileToPile', [index, secondIndex, depth]);
+					else return c.outputCommand('move', null);
+				}
+				else return c.outputCommand('wasteToPile', [secondIndex]);
+			}.bind(this);
 			if (left) {
 				second.index = this.cycle(second.index, false, false);
 				return c.outputCommand('move', null);
@@ -59,21 +96,40 @@ const GameController = function(c) {
 				return c.outputCommand('move', null);
 			} else if (esc || to) {
 				if (this.pileCounts[second.index]) first.index = second.index;
-				if (bufferBeforeToMode.type == 'pile') first.type = 'pile';
-				first.depth = 0;
+				first.type = bufferTypeBeforeToMode;
+				first.depth = first.type == 'pile' ? 0 : this.wasteCount;
 				this.buffer.pop();
 				return c.outputCommand('move', null);
-			} else if (enter && first.index != second.index) {
-				return c.outputCommand('pileToPile', [first.index, second.index, first.depth]);
+			} else if (jumpTo != null) {
+				second.index = jumpTo;
+				return submitBuffer();
+			} else if (foundationShortcut) {
+				return c.outputCommand('pileToFoundation', [this.buffer.shift().index]);
+			} else if (enter) {
+				return submitBuffer();
 			}
 		}
 		return false;
+	}
+	this.moveToUndoSpot = function(index) {
+		const first = this.buffer[0];
+		if (index != null) {
+			first.type = 'pile';
+			first.index = index;
+		} else {
+			first.type = 'waste';
+			first.depth = this.wasteCount + 1;
+		}
 	}
 	this.cycle = function(index, up = true, skip = true) {
 		const newIndex = c.cycle(index, 7, up);
 		if (skip && this.pileCounts[newIndex] == 0)
 			return this.cycle(newIndex, up, true);
 		else return newIndex;
+	}
+	this.checkForOverhang = function(pileCounts) {
+		const first = this.buffer[0];
+		if (pileCounts[first.index] == 0) this.buffer[0].index = this.cycle(first.index);
 	}
 	this.getData = () => this.buffer;
 }

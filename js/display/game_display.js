@@ -96,16 +96,28 @@ const GameDisplay = function(d) {
 	const drawController = function(buffer) {
 		let cursor = ' '.repeat(cardWidth);
 		const cursorY = navigation.bottom;
+		const drawCursor = function(bufferElement) {
+			let x, y;
+			if (bufferElement.type == 'pile') {
+				x = relativePileX(bufferElement.index);
+				y = navigation.bottom;
+			} else {// bufferElement.type == 'waste'
+				x = relativePileX(1) + (bufferElement.depth - 1) * 4;
+				y = 0;
+			}
+			navigation.draw(cursor, x, y);
+		}
 		d.setColor('cur');
-		navigation.draw(cursor, relativePileX(buffer[buffer.length == 2 | 0].index), cursorY);
+		// navigation.draw(cursor, relativePileX(buffer[buffer.length == 2 | 0].index), cursorY);
+		drawCursor(buffer[buffer.length == 2 | 0]);
 		if (buffer.length == 2) {
 			d.setColor('tom');
 			if (d.theme['cur'][1] == d.theme['tom'][1]) { // Check for same color, like in pipboy theme
 				d.setColor('tab');
 				cursor = '░'.repeat(cardWidth);
 			}
-			navigation.draw(cursor, relativePileX(buffer[0].index), cursorY);
-		} else {
+			// navigation.draw(cursor, relativePileX(buffer[0].index), cursorY);
+			drawCursor(buffer[0]);
 		}
 	}
 
@@ -185,15 +197,15 @@ const GameDisplay = function(d) {
 			d.setColor('tab');
 			debugRight.draw(command.type, 0, y).draw('index', 0, y + 1);
 			d.buffer.setFg(d.theme['accent']);
-			debugRight.draw(command.path[0].toString(), 6, y + 1);
+			debugRight.draw(command.path[0] == null ? '-' : command.path[0].toString(), 6, y + 1);
 			d.setColor('tab');
 			debugRight.draw('--> index', 8, y + 1);
 			d.buffer.setFg(d.theme['accent']);
-			debugRight.draw(command.path[1].toString(), 18, y + 1);
+			debugRight.draw(command.path[1] == null ? '-' : command.path[1].toString(), 18, y + 1);
 			d.setColor('tab');
 			debugRight.draw('depth', 23, y + 1);
 			d.buffer.setFg(d.theme['accent']);
-			const depthString = command.depth == null ? 'null' : command.depth.toString() ;
+			const depthString = command.depth == null ? '-' : command.depth.toString() ;
 			debugRight.draw(depthString, 29, y + 1);
 			d.setColor('tab');
 			debugRight.draw(divider, 0, y + 2);

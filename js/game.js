@@ -42,40 +42,36 @@ const Game = function() {
 	}
 	let deckStartOver = false;
 	this.flipDeck = function(forward = true) { // I hate the repetitiveness of this function
-		if (forward) {
-			let i = 0;
-			while (this.stock.length > 0 && i < this.drawAmount) {
-				deckStartOver = false;
-				this.waste.push(this.stock.pop());
-				i++;
-			}
-			this.wasteVisible = this.wasteVisible + (this.waste.length <= 3);
-
-			if (this.stock.length == 0) {
-				if (deckStartOver) {
-					let wasteLength = this.waste.length;
-					for (let i = 0; i < wasteLength; i++) {
-						this.stock.push(this.waste.pop());
-					}
-					this.wasteVisible = 0;
-				} else deckStartOver = true;
-			}
-		} else { // I have yet to implement this.wasteVisible because undoing isn't a thing yet
-			let amount = this.waste.length - Math.floor((this.waste.length - 1) / this.drawAmount) * this.drawAmount;
-			let i = 0;
-			while (this.waste.length > 0 && i < amount) {
-				deckStartOver = false;
-				this.stock.push(this.waste.pop());
-				i++;
-			}
-			if (this.waste.length == 0) {
-				if (deckStartOver) {
-					let stockLength = this.stock.length;
-					for (let i = 0; i < stockLength; i++) {
-						this.waste.push(this.stock.pop());
-					}
-				} else deckStartOver = true;
-			}
+		let i = 0;
+		while (this.stock.length > 0 && i < this.drawAmount) {
+			deckStartOver = false;
+			this.waste.push(this.stock.pop());
+			i++;
+		}
+		if (this.stock.length == 0) {
+			if (deckStartOver) {
+				const wasteLength = this.waste.length;
+				for (let i = 0; i < wasteLength; i++) this.stock.push(this.waste.pop());
+			} else deckStartOver = true;
+		}
+		return {type: 'flipDeckUndo', path: [null, null], depth: null};
+	}
+	this.flipDeckUndo = function() {
+		const wasteLength = this.waste.length;
+		let amount = wasteLength - Math.floor((wasteLength - 1) / this.drawAmount) * this.drawAmount;
+		let i = 0;
+		while (this.waste.length > 0 && i < amount) {
+			deckStartOver = false;
+			this.stock.push(this.waste.pop());
+			i++;
+		}
+		if (this.waste.length == 0) {
+			if (deckStartOver) {
+				const stockLength = this.stock.length;
+				for (let i = 0; i < stockLength; i++) {
+					this.waste.push(this.stock.pop());
+				}
+			} else deckStartOver = true;
 		}
 	}
 	this.validPair = function(card, target) {
@@ -108,33 +104,49 @@ const Game = function() {
 			}
 			absoluteDepth += depth;
 		}
-
 		const secondPileLength = secondPile.length;
 		if (undo || this.validPair(firstPile[absoluteDepth], secondPile[secondPileLength - 1])) {
 			const depthForUndoCommand = secondPileLength ? secondPileLength : 0;
 			this.piles[secondIndex] = secondPile.concat(firstPile.splice(absoluteDepth, firstPile.length - absoluteDepth));
 			if (undo && secondPile.length) secondPile[secondPileLength - 1].faceUp = false;
 			else if (firstPile.length) firstPile[firstPile.length - 1].faceUp = true;
-			return {type: 'pileToPile', path: [secondIndex, firstIndex], depth: depthForUndoCommand};
-		}
-		return false;
+			return {type: 'pileToPileUndo', path: [secondIndex, firstIndex], depth: depthForUndoCommand};
+		} return false;
 	}
-	this.pileToPile.undo = (path, depth) => {
+	this.pileToPileUndo = (path, depth) => {
 		this.pileToPile(path[0], path[1], depth, true);
 	}
-	this.pileToFoundation = function(index) {
-		const pile = this.piles[index];
+	this.pileToFoundation = function(pileIndex) {
+		const pile = this.piles[pileIndex];
 		if (!pile.length) return false;
 		const card = pile[pile.length - 1];
 		if (this.validSubmit(card)) {
-		// if (true) {
 			const foundationIndex = suitIndex(card.suit);
 			this.foundations[foundationIndex].push(pile.pop());
 			if (pile.length) pile[pile.length - 1].faceUp = true;
-			return {type: 'foundationToPile', path: [foundationIndex, index], depth: null};
-		}
-		return false;
+			return {type: 'foundationToPile', path: [foundationIndex, pileIndex], depth: null};
+		} return false;
 	}
+	this.foundationToPile = function(path, depth) {
+		const foundation = this.foundations[path[0]];
+		const pile = this.piles[path[1]];
+		if (pile.length) pile[pile.length - 1].faceUp = false;
+		pile.push(foundation.pop());
+	}
+	this.wasteToPile = function(index) {
+		const pile = this.piles[index];
+		const card = this.waste[this.waste.length - 1];
+		const target = pile[pile.length - 1];
+		if (this.validPair(card, target)) {
+			pile.push(this.waste.pop());
+			return {type: 'pileToWaste', path: [index, null], depth: null};
+		} return false;
+	}
+	this.pileToWaste = function(path, depth) {
+		const pile = this.piles[path[0]];
+		this.waste.push(pile.pop());
+	}
+
 	this.getPileData = function() {
 		let output = [];
 		for (let pile of this.piles) {
@@ -145,6 +157,7 @@ const Game = function() {
 		}
 		return output;
 	}
+	this.getWasteCount = () => this.waste.length < 3 ? this.waste.length : 3;
 	this.getData = function() {
 		return {
 			stock: this.stock,
