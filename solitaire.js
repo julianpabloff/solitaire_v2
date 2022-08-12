@@ -93,15 +93,19 @@ update.game = function(command) {
 			undoSteps.push(game.flipDeck());
 			display.game.debugUndoCommand(undoSteps);
 			const first = controller.game.buffer[0];
-			if (first.type == 'waste') first.depth = game.getWasteCount();
+			if (first.type == 'waste') {
+				first.depth = game.getWasteCount();
+				if (first.depth == 0) first.type = 'pile';
+			}
 			break;
 		case 'move': break;
 		case 'undo':
 			if (undoSteps.length) {
 				const undoCommand = undoSteps.pop();
 				game[undoCommand.type](undoCommand.path, undoCommand.depth);
-				if (undoCommand.path[0]) controller.game.moveToUndoSpot(undoCommand.path[1]);
-				// controller.game.buffer[0].index = undoCommand.path[1]; // move controller to undo spot
+				controller.game.wasteCount = game.getWasteCount();
+				// if (undoCommand.path[0] != null) controller.game.moveToUndoSpot(undoCommand.path[1]);
+				controller.game.moveToUndoSpot(undoCommand.path, game.getWasteCount());
 				display.game.debugUndoCommand(undoSteps);
 			}
 			break;
@@ -114,6 +118,9 @@ update.game = function(command) {
 			case 'pileToFoundation':
 				controller.game.checkForOverhang(game.getPileData());
 				break;
+			case 'wasteToFoundation':
+				const first = controller.game.buffer[0];
+				if (first.type == 'waste') first.depth = game.getWasteCount();
 		}
 		undoSteps.push(actionRan);
 		display.game.debugUndoCommand(undoSteps);
@@ -121,6 +128,7 @@ update.game = function(command) {
 	controller.game.pileCounts = game.getPileData();
 	controller.game.wasteCount = game.getWasteCount();
 	display.game.debugPileCounts(controller.game.pileCounts);
+	display.game.debugWasteCount(controller.game.wasteCount);
 	display.game.update(game.getData(), controller.game.getData());
 }
 const getData = {};

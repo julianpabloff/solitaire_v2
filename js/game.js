@@ -91,7 +91,7 @@ const Game = function() {
 		if (card.value == target.value + 1) return true;
 		else return false;
 	}
-	this.pileToPile = function(firstIndex, secondIndex, depth, undo = false) {
+	this.pileToPile = function(firstIndex, secondIndex, depth, undo = false, flipDestination = true) {
 		const firstPile = this.piles[firstIndex];
 		const secondPile = this.piles[secondIndex];
 
@@ -108,29 +108,36 @@ const Game = function() {
 		if (undo || this.validPair(firstPile[absoluteDepth], secondPile[secondPileLength - 1])) {
 			const depthForUndoCommand = secondPileLength ? secondPileLength : 0;
 			this.piles[secondIndex] = secondPile.concat(firstPile.splice(absoluteDepth, firstPile.length - absoluteDepth));
-			if (undo && secondPile.length) secondPile[secondPileLength - 1].faceUp = false;
+			if (undo && secondPile.length && flipDestination) secondPile[secondPileLength - 1].faceUp = false;
 			else if (firstPile.length) firstPile[firstPile.length - 1].faceUp = true;
-			return {type: 'pileToPileUndo', path: [secondIndex, firstIndex], depth: depthForUndoCommand};
+			return {type: 'pileToPileUndo', path: [secondIndex, firstIndex, depth == 0], depth: depthForUndoCommand};
 		} return false;
 	}
 	this.pileToPileUndo = (path, depth) => {
-		this.pileToPile(path[0], path[1], depth, true);
+		this.pileToPile(path[0], path[1], depth, true, path[2]);
 	}
 	this.pileToFoundation = function(pileIndex) {
 		const pile = this.piles[pileIndex];
-		if (!pile.length) return false;
+			if (!pile.length) return false;
 		const card = pile[pile.length - 1];
 		if (this.validSubmit(card)) {
 			const foundationIndex = suitIndex(card.suit);
 			this.foundations[foundationIndex].push(pile.pop());
-			if (pile.length) pile[pile.length - 1].faceUp = true;
-			return {type: 'foundationToPile', path: [foundationIndex, pileIndex], depth: null};
+			faceDownOnUndo = false;
+			if (pile.length) {
+				const cardAbove = pile[pile.length - 1];
+				if (!cardAbove.faceUp) {
+					faceDownOnUndo = true;
+					pile[pile.length - 1].faceUp = true;
+				}
+			}
+			return {type: 'foundationToPile', path: [foundationIndex, pileIndex, faceDownOnUndo], depth: null};
 		} return false;
 	}
 	this.foundationToPile = function(path, depth) {
 		const foundation = this.foundations[path[0]];
 		const pile = this.piles[path[1]];
-		if (pile.length) pile[pile.length - 1].faceUp = false;
+		if (path[2] && pile.length) pile[pile.length - 1].faceUp = false;
 		pile.push(foundation.pop());
 	}
 	this.wasteToPile = function(index) {
@@ -145,6 +152,17 @@ const Game = function() {
 	this.pileToWaste = function(path, depth) {
 		const pile = this.piles[path[0]];
 		this.waste.push(pile.pop());
+	}
+	this.wasteToFoundation = function() {
+		const card = this.waste[this.waste.length - 1];
+		if (this.validSubmit(card)) {
+			const foundationIndex = suitIndex(card.suit);
+			this.foundations[foundationIndex].push(this.waste.pop());
+			return {type: 'foundationToWaste', path: [foundationIndex, null], depth: null};
+		} return false;
+	}
+	this.foundationToWaste = function(path, depth) {
+		this.waste.push(this.foundations[path[0]].pop());
 	}
 
 	this.getPileData = function() {

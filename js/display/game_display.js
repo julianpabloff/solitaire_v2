@@ -174,6 +174,12 @@ const GameDisplay = function(d) {
 			debugTop.write(count.toString() + ' ');
 		}
 	}
+	this.debugWasteCount = function(wasteCount) {
+		d.setColor('tab');
+		debugTop.draw('waste count ', 15, 1);
+		d.buffer.setFg(d.theme['accent']);
+		debugTop.write(wasteCount.toString());
+	}
 	this.debugCommand = function(commandType, ran) {
 		d.setColor('tab');
 		debugTop.draw('submitted ', 0, 6);
@@ -207,7 +213,9 @@ const GameDisplay = function(d) {
 			d.buffer.setFg(d.theme['accent']);
 			const depthString = command.depth == null ? '-' : command.depth.toString() ;
 			debugRight.draw(depthString, 29, y + 1);
+			if (command.path[2] != undefined) debugRight.draw(command.path[2].toString(), 28, y);
 			d.setColor('tab');
+			if (command.path[2] != undefined) debugRight.draw('flip', 23, y);
 			debugRight.draw(divider, 0, y + 2);
 			j++;
 		}
