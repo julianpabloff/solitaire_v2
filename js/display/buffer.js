@@ -512,6 +512,11 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		this.changed = true;
 		return this;
 	}
+	this.fillArea = function(x, y, w, h, color = false) {
+		if (color) manager.setBg(color);
+		const row = ' '.repeat(w);
+		for (let i = 0; i < h; i++) this.draw(row, x, y + i);
+	}
 	this.fillPrevious = function(color, char = ' ', foreground = null) {
 		this.previous.fill(char.charCodeAt(0));
 		manager.setBg(color);

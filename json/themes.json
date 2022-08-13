@@ -42,10 +42,10 @@
 		"accent" : "red"
 	},
 	{
-		"title" : "pipboy",
-		"h" : ["green", "none"],
+		"title" : "thermal",
+		"h" : ["black", "green"],
 		"c" : ["green", "none"],
-		"d" : ["green", "none"],
+		"d" : ["black", "green"],
 		"s" : ["green", "none"],
 		"bac" : ["green", "none"],
 		"tab" : ["green", "black"],

@@ -65,6 +65,7 @@ const GameController = function(c) {
 			} else if (down && first.type == 'waste') {
 				first.type = 'pile';
 				first.depth = 0;
+				if (this.pileCounts[first.index] == 0) this.buffer[0].index = this.cycle(first.index);
 				return c.outputCommand('move');
 			} else if (wasteShortcut && this.wasteCount) {
 				const typeToSave = first.type;
@@ -102,8 +103,13 @@ const GameController = function(c) {
 				this.buffer.pop();
 				return c.outputCommand('move');
 			} else if (jumpTo != null) {
-				second.index = jumpTo;
-				return submitBuffer();
+				if (this.pileCounts[first.index]) {
+					second.index = jumpTo;
+					return submitBuffer();
+				} else {
+					this.buffer.shift();
+					return c.outputCommand('move');
+				}
 			} else if (foundationShortcut) {
 				if (first.type == 'pile') return c.outputCommand('pileToFoundation', [this.buffer.shift().index]);
 				else {

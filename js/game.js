@@ -42,6 +42,7 @@ const Game = function() {
 	}
 	let deckStartOver = false;
 	this.flipDeck = function(forward = true) { // I hate the repetitiveness of this function
+		const initialWasteLength = this.waste.length;
 		let i = 0;
 		while (this.stock.length > 0 && i < this.drawAmount) {
 			deckStartOver = false;
@@ -54,16 +55,16 @@ const Game = function() {
 				for (let i = 0; i < wasteLength; i++) this.stock.push(this.waste.pop());
 			} else deckStartOver = true;
 		}
-		return {type: 'flipDeckUndo', path: [null, null], depth: null};
+		return {type: 'flipDeckUndo', path: [null, null], depth: initialWasteLength};
 	}
-	this.flipDeckUndo = function() {
-		const wasteLength = this.waste.length;
-		let amount = wasteLength - Math.floor((wasteLength - 1) / this.drawAmount) * this.drawAmount;
-		let i = 0;
-		while (this.waste.length > 0 && i < amount) {
+	this.flipDeckUndo = function(path, depth) {
+		// const wasteLength = this.waste.length;
+		// let amount = wasteLength - Math.floor((wasteLength - 1) / this.drawAmount) * this.drawAmount;
+		let i = this.waste.length;
+		while (i > depth) {
 			deckStartOver = false;
 			this.stock.push(this.waste.pop());
-			i++;
+			i--;
 		}
 		if (this.waste.length == 0) {
 			if (deckStartOver) {

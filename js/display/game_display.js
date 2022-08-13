@@ -82,15 +82,25 @@ const GameDisplay = function(d) {
 	// PILES
 	const piles = [];
 	for (let i = 0; i < 7; i++)
-		piles.push(d.buffer.new(cardX + (cardWidth + margin) * i, cardY, cardWidth, d.height - cardY, 1, 'game'));
-	const drawPiles = function(pilesData) {
+		piles.push(d.buffer.new(cardX + (cardWidth + margin) * i - 2, cardY, cardWidth + 4, d.height - cardY + 1, 1, 'game'));
+	const drawPiles = function(pilesData, buffer) {
+		const underToModeIndex = buffer.length == 2 && buffer[0].type == 'pile' ? buffer[0].index : null;
 		for (let i = 0; i < pilesData.length; i++) {
 			const cards = pilesData[i];
-			if (cards.length)
-			for (let j = 0; j < cards.length; j++) drawCard(piles[i], cards[j], 0, 2 * j);
+			if (cards.length) {
+				let faceUpCount = 0;
+				for (let j = 0; j < cards.length; j++) {
+					const card = cards[j];
+					if (pileFaceUpDepths[i] == null && card.faceUp) pileFaceUpDepths[i] = j;
+					const elevateCard = card.faceUp && underToModeIndex == i && faceUpCount >= buffer[0].depth;
+					drawCard(piles[i], card, 2 + elevateCard, 2 * j - elevateCard + 1);
+					faceUpCount += card.faceUp;
+				}
+			}
 			else piles[i].clearDraw();
 		}
 	}
+	const pileFaceUpDepths = [];
 	// NAVIGATION
 	const navigation = d.buffer.new(cardX, topY - 2, totalWidth, 15, 2, 'game');
 	const drawController = function(buffer) {
@@ -116,8 +126,14 @@ const GameDisplay = function(d) {
 				d.setColor('tab');
 				cursor = '░'.repeat(cardWidth);
 			}
-			// navigation.draw(cursor, relativePileX(buffer[0].index), cursorY);
 			drawCursor(buffer[0]);
+			// const first = buffer[0];
+			// if (first.type == 'pile') {
+			// 	d.buffer.setColor(d.theme['tom'][1], d.theme['tab'][1]);
+			// 	const pileBuffer = piles[first.index];
+			// 	const y = (pileFaceUpDepths[first.index] + first.depth) * 2 + 1;
+			// 	pileBuffer.draw('>', 0, y).draw('<', pileBuffer.end, y);
+			// }
 		}
 	}
 
@@ -227,7 +243,7 @@ const GameDisplay = function(d) {
 		drawFoundations(cardData.foundations);
 		drawStock(cardData.stock);
 		drawWaste(cardData.waste);
-		drawPiles(cardData.piles);
+		drawPiles(cardData.piles, buffer);
 		drawController(buffer);
 	}
 	// Change to just render the buffers you need to - it feels slow

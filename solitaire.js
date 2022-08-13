@@ -8,7 +8,7 @@ const themes = require('./json/themes.json');
 let jsonSettings = {
 	theme: 'ice',
 	label: false,
-	draw: 1
+	draw: 3
 };
 const allSettings = {
 	// theme: ['normal', 'light', 'dark', 'ice', 'candy'],
@@ -120,7 +120,8 @@ update.game = function(command) {
 				break;
 			case 'wasteToFoundation':
 				const first = controller.game.buffer[0];
-				if (first.type == 'waste') first.depth = game.getWasteCount();
+				first.depth = game.getWasteCount();
+				if (first.depth == 0) first.type = 'pile';
 		}
 		undoSteps.push(actionRan);
 		display.game.debugUndoCommand(undoSteps);
