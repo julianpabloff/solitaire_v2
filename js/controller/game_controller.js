@@ -79,7 +79,7 @@ const GameController = function(c) {
 				return c.outputCommand('undo', null);
 			} else if (esc) {
 				this.buffer.push({type: 'pause', index: 0, depth: 0});
-				return c.outputCommand('pause', this.buffer[1].index);
+				return c.outputCommand('move');
 			}
 		} else if (this.buffer[1].type != 'pause') { // buffer.length == 2
 			const second = this.buffer[1];
