@@ -140,7 +140,6 @@ const BufferManager = function() {
 				if (code && !output.code) output.code = code;
 				if (fg && !output.fg) output.fg = fg;
 				if (bg && !output.bg) output.bg = bg;
-				// else if (!buffer.transparent) return false;
 			}
 			if (buffer.id == target.id) found = true; 
 		}
@@ -355,6 +354,14 @@ const BufferManager = function() {
 		}
 		process.stdout.write(output.join(''));
 	}
+	this.groupRender = function() {
+		const buffersToRender = [...arguments];
+		const output = [];
+		for (const buffer of buffersToRender) {
+			output.push(buffer.render(true, false));
+		}
+		process.stdout.write(output.join(''));
+	}
 }
 
 const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0) {
@@ -370,6 +377,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 	this.screen = screen;
 	this.zIndex = zIndex;
 	this.transparent = true;
+	this.enforceChanged = true;
 
 	this.reset = function() {
 		this.current = new Uint16Array(this.size);
@@ -445,8 +453,8 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		this.previous[index] = code;
 		this.prevColors[index] = color;
 	}
-	this.render = function(clearLastFrame = true) {
-		if (!this.changed) return;
+	this.render = function(clearLastFrame = true, execute = true) {
+		if (!this.changed && this.enforceChanged) return;
 		const output = [];
 		for (let i = 0; i < this.size; i++) {
 			let code = this.current[i];
@@ -471,7 +479,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 					drawingCode = 32;
 					drawingColorCode = 0;
 				}
-			} else if ((colorCode & 0x0F) == 0) { // Character present but no background color
+			} else if ((colorCode & 0x0F) == 0 && this.transparent) { // Character present but no background color
 				const below = manager.somethingBelow(this, x, y);
 				if (below) drawingColorCode = (drawingColorCode & 0xF0) + below.bg;
 			}
@@ -496,8 +504,11 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 			this.moveToPrevious(i, code, colorCode);
 		}
 		this.changed = false;
-		if (true) process.stdout.write(output.join(''));
-		return this;
+		const outputString = output.join('');
+		if (execute) {
+			process.stdout.write(outputString);
+			return this;
+		} else return outputString;
 	}
 	// For adding to the canvas without it clearing
 	this.paint = function() {

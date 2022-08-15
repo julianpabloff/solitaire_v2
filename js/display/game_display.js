@@ -7,17 +7,24 @@ const GameDisplay = function(d) {
 	const findPileX = index => cardX + (cardWidth + margin) * index;
 	const relativePileX = index => (cardWidth + margin) * index;
 
+	const pauseText = ['RESUME', 'NEW GAME', 'SETTINGS', 'SAVE && QUIT'];
+
 	this.setSize = function() {
 		cardX = Math.floor((d.width - (cardWidth + margin) * 7 + margin) / 2);
 		cardY = Math.floor((d.height - cardHeight) / 2);
 		topY = cardY - cardHeight - margin;
-		testX = d.centerWidth(totalWidth);
 		foundationsX = [];
+		pauseDimensions = {
+			w: 16,
+			h: pauseText.length + 5,
+			x: d.centerWidth(16),
+			y: d.centerHeight(pauseText.length + 5)
+		}
 		for (let i = 0; i < 4; i++) {
 			foundationsX.push(findPileX(3 + i));
 		}
 	}
-	let cardX, cardY, topY, foundationsX, testX;
+	let cardX, cardY, topY, foundationsX, pauseDimensions;
 	this.setSize();
 
 	const cardSuits = {
@@ -84,23 +91,27 @@ const GameDisplay = function(d) {
 	for (let i = 0; i < 7; i++)
 		piles.push(d.buffer.new(cardX + (cardWidth + margin) * i - 2, cardY, cardWidth + 4, d.height - cardY + 1, 1, 'game'));
 	const drawPiles = function(pilesData, buffer) {
-		const underToModeIndex = buffer.length == 2 && buffer[0].type == 'pile' ? buffer[0].index : null;
+		const underToModeIndex = buffer.length == 2 && buffer[0].type == 'pile' && buffer[1].type != 'pause' ? buffer[0].index : null;
+		maxPileDepth = 0;
 		for (let i = 0; i < pilesData.length; i++) {
 			const cards = pilesData[i];
-			if (cards.length) {
+			const cardsLength = cards.length;
+			if (cardsLength) {
 				let faceUpCount = 0;
-				for (let j = 0; j < cards.length; j++) {
+				for (let j = 0; j < cardsLength; j++) {
 					const card = cards[j];
 					if (pileFaceUpDepths[i] == null && card.faceUp) pileFaceUpDepths[i] = j;
 					const elevateCard = card.faceUp && underToModeIndex == i && faceUpCount >= buffer[0].depth;
 					drawCard(piles[i], card, 2 + elevateCard, 2 * j - elevateCard + 1);
 					faceUpCount += card.faceUp;
 				}
+				if (maxPileDepth < cardsLength) maxPileDepth = cardsLength;
 			}
 			else piles[i].clearDraw();
 		}
 	}
 	const pileFaceUpDepths = [];
+	let maxPileDepth = 0;
 	// NAVIGATION
 	const navigation = d.buffer.new(cardX, topY - 2, totalWidth, 15, 2, 'game');
 	const drawController = function(buffer) {
@@ -111,29 +122,22 @@ const GameDisplay = function(d) {
 			if (bufferElement.type == 'pile') {
 				x = relativePileX(bufferElement.index);
 				y = navigation.bottom;
-			} else {// bufferElement.type == 'waste'
+			} else { // if bufferElement.type == 'waste'
 				x = relativePileX(1) + (bufferElement.depth - 1) * 4;
 				y = 0;
 			}
 			navigation.draw(cursor, x, y);
 		}
 		d.setColor('cur');
-		// navigation.draw(cursor, relativePileX(buffer[buffer.length == 2 | 0].index), cursorY);
-		drawCursor(buffer[buffer.length == 2 | 0]);
-		if (buffer.length == 2) {
+		const toMode = buffer.length == 2 && buffer[1].type != 'pause';
+		drawCursor(buffer[toMode | 0]);
+		if (toMode) {
 			d.setColor('tom');
 			if (d.theme['cur'][1] == d.theme['tom'][1]) { // Check for same color, like in pipboy theme
 				d.setColor('tab');
 				cursor = '░'.repeat(cardWidth);
 			}
 			drawCursor(buffer[0]);
-			// const first = buffer[0];
-			// if (first.type == 'pile') {
-			// 	d.buffer.setColor(d.theme['tom'][1], d.theme['tab'][1]);
-			// 	const pileBuffer = piles[first.index];
-			// 	const y = (pileFaceUpDepths[first.index] + first.depth) * 2 + 1;
-			// 	pileBuffer.draw('>', 0, y).draw('<', pileBuffer.end, y);
-			// }
 		}
 	}
 
@@ -142,13 +146,19 @@ const GameDisplay = function(d) {
 	const debugTop = d.buffer.new(52, 1, 51, 8, 3, 'game');
 	const debugRight = d.buffer.new(d.width - 39, 1, 37, 40, 3, 'game');
 	const drawDebug = function(cardData, buffer) {
+		const foundationsDebugY = 2 + maxPileDepth;
 		d.setColor('tab');
-		debugLeft.draw('STOCK', 0, 0).draw('PILES', 10, 0).draw('FOUNDATIONS', 10, 9);
+		debugLeft.draw('STOCK', 0, 0).draw('PILES', 10, 0).draw('FOUNDATIONS', 10, foundationsDebugY);
 		// debugTop.draw('FOUNDATIONS', 0, 0);
-		function drawCardDebug(card, x, y) {
-			d.setColor(card.suit);
-			const cardString = card.value.toString() + card.suit;
-			debugLeft.draw(cardString + ' '.repeat(3 - cardString.length), x, y);
+		function drawCardDebug(card, x, y, faceUp = true) {
+			if (faceUp) {
+				d.setColor(card.suit);
+				const cardString = card.value.toString() + card.suit;
+				debugLeft.draw(cardString + ' '.repeat(3 - cardString.length), x, y);
+			} else {
+				d.setColor('tab');
+				debugLeft.draw('░░░', x, y);
+			}
 		}
 		for (let i = 0; i < cardData.stock.length; i++) drawCardDebug(cardData.stock[i], 0, 1 + i);
 		for (let i = 0; i < cardData.waste.length; i++) drawCardDebug(cardData.waste[i], 4, 1 + i);
@@ -158,7 +168,10 @@ const GameDisplay = function(d) {
 		}
 		for (let i = 0; i < cardData.foundations.length; i++) {
 			const cards = cardData.foundations[i];
-			for (let c = 0; c < cards.length; c++) drawCardDebug(cards[c], 4 * i + 10, 10 + c);
+			const x = 10 + 4 * i;
+			if (cards.length)
+				for (let c = 0; c < cards.length; c++) drawCardDebug(cards[c], x, foundationsDebugY + 1 + c);
+			else drawCardDebug(null, x, foundationsDebugY + 1, false);
 		}
 
 		debugTop.draw('CONTROLLER', 0, 0, ...d.theme['tab']);
@@ -238,15 +251,36 @@ const GameDisplay = function(d) {
 		debugRight.save();
 	}
 
+	// PAUSE
+	const pause = d.buffer.new(pauseDimensions.x, pauseDimensions.y, pauseDimensions.w, pauseDimensions.h, 5, 'game');
+	pause.transparent = false;
+	// const pauseOverlay = d.buffer.new(0, 0, d.width, d.height, 4, 'game');
+	pause.enforceChanged = false;
+	// pauseOverlay.enforceChanged = false;
+	const drawPause = function(index) {
+		// pauseOverlay.fill('none', '.', 'white');
+		d.setColor('txt');
+		d.drawSquare(pause, 0, 0, pause.width, pause.height, true);
+		for (let i = 0; i < pauseText.length; i++) {
+			if (i == index) d.setColor('txtcur');
+			else d.setColor('txt');
+			const text = pauseText[i];
+			const spacing = Math.floor((pause.width - text.length - 2) / 2);
+			const output = ' '.repeat(spacing) + text + ' '.repeat(spacing);
+			pause.draw(output, 1, 1 + 2 * i);
+		}
+	}
+
 	this.draw = function(cardData, buffer) {
-		drawDebug(cardData, buffer);
 		drawFoundations(cardData.foundations);
 		drawStock(cardData.stock);
 		drawWaste(cardData.waste);
 		drawPiles(cardData.piles, buffer);
 		drawController(buffer);
+		drawDebug(cardData, buffer);
+		if (buffer.length == 2 && buffer[1].type == 'pause') drawPause(buffer[1].index);
 	}
-	// Change to just render the buffers you need to - it feels slow
+		// Change to just render the buffers you need to - it feels slow
 	// Perhaps build it into the buffer using a changed boolean on the draw function
 	this.update = function(cardData, buffer) {
 		const start = Date.now();
@@ -258,11 +292,12 @@ const GameDisplay = function(d) {
 		debugLeft.render();
 		debugTop.render();
 		debugRight.render();
+		// d.buffer.groupRender(pause, pauseOverlay);
+		pause.render();
+		// pauseOverlay.render();
 		// debugLeft.outline('red');
 		// debugRight.outline('red');
 		// d.debug((Date.now() - start).toString());
-	}
-	this.up = function() {
 	}
 	this.resize = function() {
 		this.setSize();

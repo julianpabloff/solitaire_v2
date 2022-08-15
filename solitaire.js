@@ -6,7 +6,7 @@ const themes = require('./json/themes.json');
 
 //Temporary
 let jsonSettings = {
-	theme: 'ice',
+	theme: 'thermal',
 	label: false,
 	draw: 3
 };

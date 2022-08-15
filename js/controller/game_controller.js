@@ -77,8 +77,11 @@ const GameController = function(c) {
 				else return c.outputCommand('wasteToFoundation', [null]);
 			} else if (undo) {
 				return c.outputCommand('undo', null);
+			} else if (esc) {
+				this.buffer.push({type: 'pause', index: 0, depth: 0});
+				return c.outputCommand('pause', this.buffer[1].index);
 			}
-		} else { // buffer.length == 2
+		} else if (this.buffer[1].type != 'pause') { // buffer.length == 2
 			const second = this.buffer[1];
 			const submitBuffer = function() {
 				const index = first.index; const depth = first.depth;
@@ -123,6 +126,15 @@ const GameController = function(c) {
 				return c.outputCommand('move');
 			} else if (up && first.type == 'pile') {
 				if (first.depth > 0) first.depth--;
+				return c.outputCommand('move');
+			}
+		} else {
+			const second = this.buffer[1];
+			if (up || down) {
+				second.index = c.cycle(second.index, 4, down);
+				return c.outputCommand('move');
+			} else if (esc) {
+				this.buffer.pop();
 				return c.outputCommand('move');
 			}
 		}
