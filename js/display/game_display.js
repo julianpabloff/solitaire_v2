@@ -15,10 +15,11 @@ const GameDisplay = function(d) {
 		topY = cardY - cardHeight - margin;
 		foundationsX = [];
 		pauseDimensions = {
-			w: 16,
+			w: 18,
 			h: pauseText.length + 5,
-			x: d.centerWidth(16),
-			y: d.centerHeight(pauseText.length + 5)
+			x: d.centerWidth(18),
+			// y: d.centerHeight(pauseText.length + 5)
+			y: cardY
 		}
 		for (let i = 0; i < 4; i++) {
 			foundationsX.push(findPileX(3 + i));
@@ -306,6 +307,7 @@ const GameDisplay = function(d) {
 		for (let i = 0; i < 7; i++) piles[i].simpleMove(cardX + (cardWidth + margin) * i - 2, cardY);
 		navigation.simpleMove(cardX, topY - 2);
 		debugRight.simpleMove(d.width - 39, 1);
+		pause.simpleMove(pauseDimensions.x, pauseDimensions.y);
 	}
 }
 
