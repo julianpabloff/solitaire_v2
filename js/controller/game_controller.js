@@ -118,10 +118,10 @@ const GameController = function(c) {
 				}
 			} else if (enter) {
 				return submitBuffer();
-			} else if (down) {
+			} else if (down && first.type == 'pile') {
 				if (first.depth < this.pileCounts[first.index] - 1) first.depth++;
 				return c.outputCommand('move');
-			} else if (up) {
+			} else if (up && first.type == 'pile') {
 				if (first.depth > 0) first.depth--;
 				return c.outputCommand('move');
 			}

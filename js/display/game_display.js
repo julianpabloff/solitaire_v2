@@ -268,7 +268,7 @@ const GameDisplay = function(d) {
 		this.setSize();
 		stock.simpleMove(cardX, topY);
 		foundations.simpleMove(foundationsX[0], topY);
-		for (let i = 0; i < 7; i++) piles[i].simpleMove(cardX + (cardWidth + margin) * i, cardY);
+		for (let i = 0; i < 7; i++) piles[i].simpleMove(cardX + (cardWidth + margin) * i - 2, cardY);
 		navigation.simpleMove(cardX, topY - 2);
 		debugRight.simpleMove(d.width - 39, 1);
 	}
