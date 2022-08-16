@@ -230,6 +230,7 @@ const GameDisplay = function(d) {
 			const command = undoSteps[i];
 			// d.setColor(...accentColor);
 			const y = 2 + 3 * j;
+			debugRight.fillArea(0, y + 1, debugRight.width, 2, 'none');
 			d.setColor('tab');
 			debugRight.draw(command.type, 0, y).draw('index', 0, y + 1);
 			d.buffer.setFg(d.theme['accent']);

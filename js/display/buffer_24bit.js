@@ -36,12 +36,13 @@ const BufferManager = function() {
 		this.codes[index] = code;
 		this.fg[index] = fg;
 		this.bg[index] = bg;
-		this.lastRenderedLocation = {x: 0, y: 0};
+		// this.lastRenderedLocation = {x: 0, y: 0};
 	}
 	this.logScreens = function() {
 		console.log(this.screens);
 	}
 
+	// Colors
 	this.fg = 0;
 	this.bg = 0;
 	this.lastRenderedColor = {fg: 0, bg: 0};
@@ -134,7 +135,6 @@ const BufferManager = function() {
 		for (let i = 0; i < screenSize; i++) {
 			const x = i % screenWidth; const y = Math.floor(i / screenWidth);
 			const point = { code: 0, fg: 0, bg: 0 };
-			let pointFound = false;
 			for (let j = zArray.length - 1; j >= 0; j--) {
 				const buffer = zArray[j];
 				const index = buffer.screenToIndex(x, y);
@@ -170,14 +170,6 @@ const BufferManager = function() {
 		this.setSize();
 		process.stdout.write(this.generateScreen(screen));
 	}
-	this.groupRender = function() {
-		const buffersToRender = [...arguments];
-		const output = [];
-		for (const buffer of buffersToRender) {
-			output.push(buffer.render(true, false));
-		}
-		process.stdout.write(output.join(''));
-	}
 	this.switchToScreen = function(screen) {
 		if (screen == this.screen) return '';
 		const zArray = this.gatherBuffersOnScreen(screen);
@@ -191,7 +183,6 @@ const BufferManager = function() {
 			const codeOnScreen = this.codes[i];
 			const fgOnScreen = this.fg[i];
 			const bgOnScreen = this.bg[i];
-			let somethingHere = false;
 			for (let j = zArray.length - 1; j >= 0; j--) {
 				const buffer = zArray[j];
 				const index = buffer.screenToIndex(x, y);
@@ -205,12 +196,11 @@ const BufferManager = function() {
 					code = buffer.current[index];
 					fg = buffer.fg[index];
 					bg = buffer.bg[index];
+					buffer.previous[index] = code;
+					buffer.prevFg[index] = fg;
+					buffer.prevBg[index] = bg;
 				}
-				buffer.previous[index] = code;
-				buffer.prevFg[index] = fg;
-				buffer.prevBg[index] = bg;
 				if (!code && !fg && !bg) continue;
-				somethingHere = true;
 				if (code && !point.code) point.code = code;
 				if (fg && !point.fg) point.fg = fg;
 				if (bg && !point.bg) point.bg = bg;
@@ -232,12 +222,21 @@ const BufferManager = function() {
 		this.screen = screen;
 		process.stdout.write(output.join(''));
 	}
+	this.groupRender = function() {
+		const buffersToRender = [...arguments];
+		const output = [];
+		for (const buffer of buffersToRender) {
+			output.push(buffer.render(true, false));
+		}
+		process.stdout.write(output.join(''));
+	}
 }
 
 const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0) {
 	this.screen = screen;
 	this.zIndex = zIndex;
 	this.transparent = true;
+	this.enforceChanged = true;
 	this.reset = function() {
 		this.current = new Uint16Array(this.size);
 		this.previous = new Uint16Array(this.size);
@@ -259,9 +258,10 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		this.reset();
 	}
 	this.setSize(x, y, width, height);
+	this.move = (x, y) => { this.x = x; this.y = y }
 
 	// Coordinates
-	this.coordinateIndex = (x, y) => (y * width) + x;
+	this.coordinateIndex = (x, y) => (y * this.width) + x;
 	this.indexToScreen = index => { return {x: this.x + (index % this.width), y: this.y + Math.floor(index / this.width)} }
 	this.screenToIndex = function(x, y) {
 		if (x < this.x || x >= this.x + this.width || y < this.y || y >= this.y + this.height) return null;
@@ -305,7 +305,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		this.prevBg[index] = bg;
 	}
 	this.render = function(clearLastFrame = true, execute = true) {
-		if (!this.changed) return;
+		if (!this.changed && this.enforceChanged) return;
 		if (manager.enforceScreens && manager.screen != this.screen) return;
 		const output = [];
 		for (let i = 0; i < this.size; i++) {
@@ -337,7 +337,7 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 					drawingFg = 0;
 					drawingBg = 0;
 				}
-			} else if (bgHex == 0) { // Character present but no background color
+			} else if (bgHex == 0 && this.transparent) { // Character present but no background color
 				const below = manager.somethingBelow(this, x, y);
 				if (below) drawingBg = below.bg;
 			}
@@ -366,10 +366,11 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 		this.render(false);
 		return this;
 	}
-	this.fill = function(hex, char = ' ', foreground = null) {
+	this.fill = function(hex, char = ' ', foregroundHex = null) {
 		const tempBg = manager.bg;
 		this.current.fill(char.charCodeAt(0));
 		manager.setBg(hex);
+		if (foreground) manager.setFg(foregroundHex);
 		this.bg.fill(hex);
 		manager.setBg(tempBg);
 		this.changed = true;
@@ -400,7 +401,6 @@ const DisplayBuffer = function(x, y, width, height, manager, screen, zIndex = 0)
 
 		process.stdout.write(output.join(''));
 	}
-	this.simpleMove = (x, y) => { this.x = x; this.y = y }
 }
 
 module.exports = BufferManager;

@@ -16,7 +16,7 @@ const SettingsDisplay = function(d) {
 	const options = [
 		[],
 		['ENABLED', 'DISABLED'],
-		['DRAW 1', 'DRAW 3']
+		['DRAW 1', 'DRAW 3'],
 	];
 	this.importThemes = () => {
 		options[0] = d.exportThemesForMenu();
@@ -30,6 +30,7 @@ const SettingsDisplay = function(d) {
 	};
 
 	const settings = d.buffer.new(x, y, w, h, 1, 'settings');
+	const colorToggle = d.buffer.new(x + settings.end - 10, y + 7, 5, 4, 2, 'settings');
 	const drawSettings = function(buffer, code) {
 		d.setColor('txt');
 		d.drawSquare(settings, 0, 0, w, h, true);
@@ -49,8 +50,6 @@ const SettingsDisplay = function(d) {
 		d.drawSquare(settings, 3, 12, 74, 19, false);
 		settings.draw('press esc when done', 4, 31);
 		d.drawPreview(settings, 4, 13, 'game', d.themes[code[0]], !code[1]);
-		// drawPreview(d.themes[code[0]], code[1] == 0);
-
 		if (buffer.length == 2) {
 			const secondWidth = 20;
 			const secondOptions = options[buffer[0]];
@@ -63,7 +62,12 @@ const SettingsDisplay = function(d) {
 				const output = ' ' + text + ' '.repeat(secondWidth - 3 - text.length);
 				settings.draw(output, 27, 7 + i);
 			}
+		} else if (buffer[0] == 3) {
+			d.setColor('txt');
+			colorToggle.draw('over here', 0, 0);
+			colorToggle.render();
 		}
+		// drawPreview(d.themes[code[0]], code[1] == 0);
 	}
 	// const preview = require('../../json/preview.json');
 	// const drawPreview = function(theme, labels = false) {

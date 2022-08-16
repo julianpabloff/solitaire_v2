@@ -14,7 +14,8 @@ const allSettings = {
 	// theme: ['normal', 'light', 'dark', 'ice', 'candy'],
 	theme: [],
 	label: [true, false],
-	draw: [1, 3]
+	draw: [1, 3],
+	rgbMode: [false, true]
 };
 for (const theme of themes) allSettings.theme.push(theme.title);
 allSettings.theme.push('manage...');
@@ -129,7 +130,7 @@ update.game = function(command) {
 	controller.game.pileCounts = game.getPileData();
 	controller.game.wasteCount = game.getWasteCount();
 	display.game.debugPileCounts(controller.game.pileCounts);
-	display.game.debugWasteCount(controller.game.wasteCount);
+	// display.game.debugWasteCount(controller.game.wasteCount);
 	display.game.update(game.getData(), controller.game.getData());
 }
 const getData = {};
@@ -140,7 +141,7 @@ getData.game = () => [game.getData(), controller.game.getData()];
 let screen = 'menu';
 function switchTo(destination, data = []) {
 	display[destination].draw(...data);
-	display.buffer.preRenderNew(destination);
+	display.buffer.switchToScreen(destination);
 	screen = destination;
 }
 
