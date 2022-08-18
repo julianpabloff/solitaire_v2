@@ -31,6 +31,7 @@ const Display = function() {
 	this.centerString = (string, width = columns) => { return Math.floor(width / 2 - string.length / 2); }
 
 	this.buffer = new BufferManager();
+	// this.buffer.colorMode = 1; // 256 mode
 	const background = this.buffer.new(0, 0, columns, rows, 0, 'all');
 
 	// this.themes = require('../../json/themes.json');

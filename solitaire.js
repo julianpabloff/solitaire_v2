@@ -6,7 +6,7 @@ const themes = require('./json/themes.json');
 
 //Temporary
 let jsonSettings = {
-	theme: 'normal',
+	theme: 'grey',
 	label: false,
 	draw: 3
 };
