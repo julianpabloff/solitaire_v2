@@ -24,7 +24,7 @@ const SettingsDisplay = function(d) {
 	};
 
 	const settings = d.buffer.new(x, y, w, h, 1, 'settings');
-	const colorToggle = d.buffer.new(x + settings.end - 10, y + 7, 5, 4, 2, 'settings');
+	// const colorToggle = d.buffer.new(x + settings.end - 10, y + 7, 5, 4, 2, 'settings');
 	const drawSettings = function(buffer, code) {
 		d.setColor('txt');
 		d.drawSquare(settings, 0, 0, w, h, true);
@@ -58,8 +58,8 @@ const SettingsDisplay = function(d) {
 			}
 		} else if (buffer[0] == 3) {
 			d.setColor('txt');
-			colorToggle.draw('over here', 0, 0);
-			colorToggle.render();
+			// colorToggle.draw('over here', 0, 0);
+			// colorToggle.render();
 		}
 	}
 	// const preview = require('../../json/preview.json');

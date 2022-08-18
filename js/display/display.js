@@ -1,4 +1,4 @@
-const BufferManager = require('./buffer.js');
+const BufferManager = require('./buffer_v2.js');
 const MenuDisplay = require('./menu_display.js');
 const GameDisplay = require('./game_display.js');
 const SettingsDisplay = require('./settings_display.js');
@@ -12,7 +12,7 @@ const Display = function() {
 	}
 	this.clear = () => {
 		process.stdout.write('\x1b[0m\x1b[2J');
-		this.buffer.lastRenderedColor = 0;
+		this.buffer.lastRenderedColor = 1 << 24;
 	}
 	this.exit = function(screen = 'menu') {
 		process.stdout.write('\x1b[?25h\x1b[0m');
@@ -53,9 +53,10 @@ const Display = function() {
 		}
 		return output;
 	}
+	const parseColor = (fgHexString, bgHexString) => [parseInt(fgHexString, 16), parseInt(bgHexString, 16)];
 	this.setColor = function(attribute) {
 		const color = this.theme[attribute];
-		this.buffer.setColor(color[0], color[1]);
+		this.buffer.setColor(...parseColor(color[0], color[1]));
 	}
 	this.applyBackground = function() {
 		const bg = this.theme['tab'][1];
@@ -94,7 +95,7 @@ const Display = function() {
 				const changeToModeCursor = item[0] == 'tom' && theme['tom'][1] == theme['cur'][1];
 				const color = changeToModeCursor ? theme['tab'] : theme[item[0]];
 				if (color[1] == 'none') color[1] = 'black';
-				this.buffer.setColor(color[0], color[1]);
+				this.buffer.setColor(...parseColor(color[0], color[1]));
 				const count = item[1];
 				for (let j = 0; j < count; j++) {
 					let char = changeToModeCursor ? '░' : preview.text[textIndex][position];
@@ -128,7 +129,7 @@ const Display = function() {
 		// this.buffer.setSize();
 		this.setSize();
 		background.setSize(0, 0, columns, rows);
-		const bg = this.theme['tab'][1];
+		const bg = parseInt(this.theme['tab'][1], 16);
 		background.fill(bg);
 		// background.fill(this.theme['tab'][1], '.', this.theme['tom'][1]);
 		this.menu.resize();
@@ -136,7 +137,7 @@ const Display = function() {
 		this.game.resize();
 		this[screen].draw(...data);
 		// this.buffer.logScreen(screen);
-		this.buffer.generateSavedScreen(screen);
+		this.buffer.resizeAndRender(screen);
 	}
 
 	this.menu = new MenuDisplay(this);

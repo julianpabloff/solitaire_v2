@@ -279,7 +279,7 @@ const GameDisplay = function(d) {
 		drawWaste(cardData.waste);
 		drawPiles(cardData.piles, buffer);
 		drawController(buffer);
-		drawDebug(cardData, buffer);
+		// drawDebug(cardData, buffer);
 		if (buffer.length == 2 && buffer[1].type == 'pause') drawPause(buffer[1].index);
 	}
 		// Change to just render the buffers you need to - it feels slow
@@ -291,9 +291,9 @@ const GameDisplay = function(d) {
 		foundations.render();
 		for (const pile of piles) pile.render();
 		navigation.render();
-		debugLeft.render();
-		debugTop.render();
-		debugRight.render();
+		// debugLeft.render();
+		// debugTop.render();
+		// debugRight.render();
 		// d.buffer.groupRender(pause, pauseOverlay);
 		pause.render();
 		// pauseOverlay.render();
