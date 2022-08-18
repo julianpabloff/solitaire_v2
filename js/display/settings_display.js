@@ -20,12 +20,6 @@ const SettingsDisplay = function(d) {
 	];
 	this.importThemes = () => {
 		options[0] = d.exportThemesForMenu();
-		// let i = 0;
-		// for (const theme of themes) {
-		// 	if (i < themes.length - 1) options[0].push(theme.toUpperCase())
-		// 	else options[0].push(theme);
-		// 	i++;
-		// }
 		options[0].push('manage...');
 	};
 
@@ -67,7 +61,6 @@ const SettingsDisplay = function(d) {
 			colorToggle.draw('over here', 0, 0);
 			colorToggle.render();
 		}
-		// drawPreview(d.themes[code[0]], code[1] == 0);
 	}
 	// const preview = require('../../json/preview.json');
 	// const drawPreview = function(theme, labels = false) {

@@ -1,5 +1,4 @@
 const BufferManager = require('./buffer.js');
-const BufferManager24Bit = require('./buffer_24bit.js');
 const MenuDisplay = require('./menu_display.js');
 const GameDisplay = require('./game_display.js');
 const SettingsDisplay = require('./settings_display.js');
@@ -19,7 +18,6 @@ const Display = function() {
 		process.stdout.write('\x1b[?25h\x1b[0m');
 		process.stdout.cursorTo(0,0);
 	}
-
 	this.setSize = function() {
 		rows = process.stdout.rows;
 		columns = process.stdout.columns;
@@ -36,6 +34,7 @@ const Display = function() {
 	const background = this.buffer.new(0, 0, columns, rows, 0, 'all');
 
 	// this.themes = require('../../json/themes.json');
+	this.themes = [];
 	this.getTheme = function(name) {
 		for (const theme of this.themes)
 			if (theme.title == name) return theme;
@@ -43,7 +42,6 @@ const Display = function() {
 	this.setTheme = function(name) {
 		this.theme = this.getTheme(name);
 	}
-	this.themes = [];
 	this.exportThemesForMenu = function() {
 		const output = [];
 		// let i = 0;
@@ -66,10 +64,9 @@ const Display = function() {
 		// background.fill(this.theme['tab'][1], '.', this.theme['tom'][1]);
 		background.render();
 	}
-	this.fillBackground = color => {background.fill(color) };
+	this.fillBackground = color => background.fill(color);
 
 	const squareElements = {
-		none: {tl: ' ', tr: ' ', bl: ' ', br: ' ', h: ' ', v: ' '},
 		thin: {tl: '┌', tr: '┐', bl: '└', br: '┘', h: '─', v: '│'},
 		thick: {tl: '┌', tr: '┐', bl: '└', br: '┘', h: '─', v: '│'}
 	};
