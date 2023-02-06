@@ -15,6 +15,7 @@ These controls may take some time to learn, but once you get the hang of it, as 
 ### Menu
 - `arrow keys` and `h, j, k, l (vim keys)` - menu naviagation
 - `enter` - select menu option
+- `esc` - back
 ### Game
 - `arrow keys` and `h, j, k, l (vim keys)` - moves current cursor
 - `t` - enter/exit **TO mode**, which locks the cursor and adds another cursor for where you want the card under the first cursor to go.
@@ -25,11 +26,13 @@ These controls may take some time to learn, but once you get the hang of it, as 
   - `number keys (1-7)` - enters **TO mode** and puts the anchor cursor on the pile with the cooresponding number
   - `w` - [shortcut] enters **TO mode** and puts the anchor cursor on the waste (if cards are present there)
   - `u` - undo last move
+  - `esc` - open pause menu
   #### TO mode:
   In this mode, the first cursor is locked (anchor cursor) and the second cursor is free to move around to select where you want the card(s) under the first cursor to go.
   - `Enter` - moves cards from the anchored cursor to the active cursor, and exits **TO mode**
   - `Number keys (1-7)` - teleports active cursor to cooresponding pile number, submits the movement, and exits **TO mode**
   - `Up/Down arrow` or `j and k (vim keys)` - changes depth of the pile under the anchor cursor
+  - `esc` cancel operation and exit **TO mode**
   - `f` - [shortcut] submit the card under the anchor cursor to the foundations
   #### Shortcut examples:
   - `4 f` submits the card on pile 4 to the foundations
